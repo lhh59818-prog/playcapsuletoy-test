@@ -263,6 +263,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
   table{font-size:10pt;page-break-inside:auto}
   tbody tr{page-break-inside:avoid}
   thead th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;position:static!important}
+  /* 자재 테이블: 헤더 매 페이지 반복 + 여러 페이지 출력 */
+  .mat-table thead{display:table-header-group}
+  .mat-table tfoot{display:table-footer-group}
+  .mat-table{font-size:8.5pt!important;page-break-inside:auto}
+  .mat-table thead th{background:#dbe4f3!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .mat-table tbody td input{border:none!important;background:transparent!important;-webkit-print-color-adjust:exact}
+  .mat-table td.col-item input,.mat-table td.col-item{white-space:normal!important;word-break:break-all;text-align:left}
+  .mat-tw{max-height:none!important;overflow:visible!important}
+  /* 출력(모달 인쇄) 모드: 모달 내용만 보이게 */
+  body.mat-print #pages,body.mat-print #app{display:none!important}
+  body.mat-print #mati-modal{display:block!important;position:static!important;background:#fff!important;inset:auto!important}
+  body.mat-print #mati-modal-box{box-shadow:none!important;max-height:none!important;width:100%!important;max-width:none!important;padding:0!important;overflow:visible!important}
 }
 /* 수주 */
 .so-form-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:20px 24px;box-shadow:var(--sh);max-width:900px;margin:0 auto;box-sizing:border-box;overflow:visible}
@@ -1047,16 +1059,23 @@ button:disabled{opacity:.45;cursor:not-allowed}
             <div class="mat-doc-head">
               <div class="mat-doc-title">캡 슐 입 고 내 역</div>
             </div>
-            <div class="mat-tw"><table class="mat-table" style="table-layout:fixed">
+            <div class="mat-tw"><table class="mat-table" id="matp-table" style="table-layout:fixed">
               <colgroup>
-                <col style="width:90px"><col style="width:90px"><col style="width:130px"><col>
-                <col style="width:75px"><col style="width:55px"><col style="width:70px"><col style="width:60px"><col style="width:90px">
+                <col style="width:62px"><col style="width:62px"><col style="width:108px"><col>
+                <col style="width:52px"><col style="width:40px"><col style="width:48px"><col style="width:42px"><col style="width:62px">
               </colgroup>
               <thead><tr>
-                <th>입고 예정일</th><th>업체</th><th>품번</th><th>품명</th>
-                <th>판매가</th><th>수량</th><th>박스수량</th><th>카톤수</th><th>실제 입고 수량</th>
+                <th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th>
+                <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th><th>실제입고</th>
               </tr></thead>
               <tbody id="matp-tb"></tbody>
+              <tfoot><tr class="mat-foot">
+                <td colspan="5" style="text-align:right;font-weight:700">합계</td>
+                <td class="col-num" id="matp-sum-qty" style="font-weight:700">0</td>
+                <td></td>
+                <td class="col-num" id="matp-sum-carton" style="font-weight:700">0</td>
+                <td></td>
+              </tr></tfoot>
             </table></div>
           </div>
         </div>
@@ -1066,46 +1085,60 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <!-- ============ 자재 입고 처리 ============ -->
     <section id="pg-mat-in" class="pg">
       <div class="fbar no-print">
-        <input class="sinput no-print" id="mati-srch" placeholder="품번, 품명, 업체..." oninput="renderMatIn()" style="width:220px">
-        <select class="fc" id="mati-status-filter" style="width:130px" onchange="renderMatIn()">
+        <select class="fc" id="mati-status-filter" style="width:120px" onchange="renderMatIn()">
           <option value="">전체 상태</option>
           <option value="대기">대기</option>
           <option value="완료">완료</option>
         </select>
+        <input class="sinput no-print" id="mati-srch" placeholder="제목, 품번, 품명, 업체..." oninput="renderMatIn()" style="width:220px">
         <button class="btn btn-def no-print" onclick="dlMatInXls()">Excel</button>
         <button class="btn btn-def no-print" onclick="loadMatIn()">↺ 새로고침</button>
       </div>
-      <div style="font-size:12px;color:var(--tx2);margin-bottom:8px" id="mati-count">총 0건</div>
+      <div class="rcnt" id="mati-count">총 0건</div>
       <div class="card"><div class="tw"><table style="table-layout:fixed">
         <colgroup>
-          <col style="width:90px"><col style="width:90px"><col style="width:130px"><col>
-          <col style="width:75px"><col style="width:55px"><col style="width:70px"><col style="width:60px"><col style="width:90px"><col style="width:70px"><col style="width:150px">
+          <col style="width:96px"><col><col style="width:80px"><col style="width:80px"><col style="width:90px"><col style="width:80px"><col style="width:230px">
         </colgroup>
         <thead><tr>
-          <th>입고 예정일</th><th>업체</th><th>품번</th><th>품명</th>
-          <th>판매가</th><th>수량</th><th>박스수량</th><th>카톤수</th><th>실제입고</th><th>상태</th><th class="no-print">관리</th>
+          <th>등록일</th><th>제목</th><th>품목수</th><th>수량합계</th><th>카톤합계</th><th>상태</th><th class="no-print">관리</th>
         </tr></thead>
         <tbody id="mati-tb"></tbody>
       </table></div></div>
     </section>
 
-    <!-- 자재 입고 수정 모달 -->
+    <!-- 자재 입고 보기/수정 모달 -->
     <div id="mati-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:600;align-items:center;justify-content:center">
-      <div style="background:#fff;border-radius:8px;padding:22px;width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)">
-        <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--tx)">자재 입고 내역 수정</div>
-        <input type="hidden" id="me-id">
-        <div class="fg"><label>입고 예정일</label><input id="me-pdate" class="fc" placeholder="26.06.02"></div>
-        <div class="fg"><label>업체</label><input id="me-vendor" class="fc"></div>
-        <div class="fg"><label>품번</label><input id="me-pno" class="fc"></div>
-        <div class="fg"><label>품명</label><input id="me-item" class="fc"></div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label>판매가</label><input type="text" inputmode="numeric" id="me-price" class="fc"></div>
-          <div class="fg"><label>수량</label><input type="text" inputmode="numeric" id="me-qty" class="fc"></div>
-          <div class="fg"><label>박스수량</label><input type="text" inputmode="numeric" id="me-box" class="fc"></div>
-          <div class="fg"><label>카톤수</label><input type="text" inputmode="numeric" id="me-carton" class="fc"></div>
+      <div id="mati-modal-box" style="background:#fff;border-radius:8px;padding:20px;width:96%;max-width:1100px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div id="mati-modal-title" style="font-size:15px;font-weight:700;color:var(--tx)">자재 입고 내역</div>
+          <div class="no-print" style="display:flex;gap:6px">
+            <button class="btn btn-pri btn-sm" id="mati-modal-save" onclick="saveMatEdit()" style="display:none">저장</button>
+            <button class="btn btn-def btn-sm" onclick="printMatModal()">출력</button>
+            <button class="btn btn-def btn-sm" onclick="closeMatEdit()">닫기</button>
+          </div>
         </div>
-        <div class="fg"><label>실제 입고 수량</label><input type="text" inputmode="numeric" id="me-actual" class="fc"></div>
-        <div class="form-acts"><button class="btn btn-pri" onclick="saveMatEdit()">저장</button><button class="btn btn-def" onclick="closeMatEdit()">취소</button></div>
+        <input type="hidden" id="me-id">
+        <div class="mat-doc" id="mati-modal-doc">
+          <div class="mat-doc-head"><div class="mat-doc-title">캡 슐 입 고 내 역</div></div>
+          <div class="mat-tw" style="max-height:70vh"><table class="mat-table" id="mati-view-table" style="table-layout:fixed">
+            <colgroup>
+              <col style="width:62px"><col style="width:62px"><col style="width:108px"><col>
+              <col style="width:52px"><col style="width:40px"><col style="width:48px"><col style="width:42px"><col style="width:62px">
+            </colgroup>
+            <thead><tr>
+              <th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th>
+              <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th><th>실제입고</th>
+            </tr></thead>
+            <tbody id="mati-view-tb"></tbody>
+            <tfoot><tr class="mat-foot">
+              <td colspan="5" style="text-align:right;font-weight:700">합계</td>
+              <td class="col-num" id="mati-view-sum-qty" style="font-weight:700">0</td>
+              <td></td>
+              <td class="col-num" id="mati-view-sum-carton" style="font-weight:700">0</td>
+              <td></td>
+            </tr></tfoot>
+          </table></div>
+        </div>
       </div>
     </div>
 
@@ -3089,10 +3122,11 @@ async function updateSoStatus(id,status){
 }
 
 // ============================================================
-// 자재 관리 (입고 예정 자재 / 자재 입고 처리)
+// 자재 관리 (입고 예정 자재 / 자재 입고 처리) - batch 구조
 // ============================================================
 const MATP_ROWS = 30; // 기본 행 수
 let _matInData = [];
+let _matViewMode = 'view'; // 'view' | 'edit'
 
 // 입고 예정일 정규화: "0602", "260602", "5월27일", "6월2일", "26.06.02" → "26.06.02"
 function normMatDate(raw){
@@ -3100,34 +3134,32 @@ function normMatDate(raw){
   let s = String(raw).trim();
   if(!s) return '';
   const yy = String(new Date().getFullYear()).slice(2); // 윈도우(시스템) 연도 기준
-  // 이미 26.06.02 / 26-06-02 / 26/06/02 형태
   let m = s.match(/^(\d{2})[.\-\/](\d{1,2})[.\-\/](\d{1,2})$/);
   if(m) return `${m[1]}.${m[2].padStart(2,'0')}.${m[3].padStart(2,'0')}`;
-  // 2026.06.02 형태
   m = s.match(/^(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})$/);
   if(m) return `${m[1].slice(2)}.${m[2].padStart(2,'0')}.${m[3].padStart(2,'0')}`;
-  // "5월27일" / "6월2일" / "5월 27일"
   m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일?/);
   if(m) return `${yy}.${m[1].padStart(2,'0')}.${m[2].padStart(2,'0')}`;
-  // 숫자만: 0602(MMDD), 260602(YYMMDD), 20260602(YYYYMMDD)
   const digits = s.replace(/\D/g,'');
-  if(digits.length===4) return `${yy}.${digits.slice(0,2)}.${digits.slice(2,4)}`;            // MMDD
-  if(digits.length===6) return `${digits.slice(0,2)}.${digits.slice(2,4)}.${digits.slice(4,6)}`; // YYMMDD
-  if(digits.length===8) return `${digits.slice(2,4)}.${digits.slice(4,6)}.${digits.slice(6,8)}`; // YYYYMMDD
-  return s; // 알 수 없으면 원본 유지
+  if(digits.length===4) return `${yy}.${digits.slice(0,2)}.${digits.slice(2,4)}`;
+  if(digits.length===6) return `${digits.slice(0,2)}.${digits.slice(2,4)}.${digits.slice(4,6)}`;
+  if(digits.length===8) return `${digits.slice(2,4)}.${digits.slice(4,6)}.${digits.slice(6,8)}`;
+  return s;
 }
 
-// 빈 행 한 줄 생성
+const matEsc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// ---------- 입고 예정 자재 (입력 폼) ----------
 function matpRowHtml(i){
   return `<tr data-r="${i}">
-    <td><input class="mp-pdate" data-c="0" placeholder="0602"></td>
+    <td><input class="mp-pdate" data-c="0"></td>
     <td><input class="mp-vendor" data-c="1"></td>
     <td><input class="mp-pno" data-c="2"></td>
     <td class="col-item"><input class="mp-item" data-c="3"></td>
     <td class="col-num"><input class="mp-price" data-c="4"></td>
-    <td class="col-num"><input class="mp-qty" data-c="5"></td>
+    <td class="col-num"><input class="mp-qty" data-c="5" oninput="updateMatpSum()"></td>
     <td class="col-num"><input class="mp-box" data-c="6"></td>
-    <td class="col-num"><input class="mp-carton" data-c="7"></td>
+    <td class="col-num"><input class="mp-carton" data-c="7" oninput="updateMatpSum()"></td>
     <td class="col-num"><input class="mp-actual" data-c="8"></td>
   </tr>`;
 }
@@ -3140,29 +3172,38 @@ function initMatPlan(){
     for(let i=0;i<MATP_ROWS;i++) html+=matpRowHtml(i);
     tb.innerHTML=html;
     attachMatpPaste();
-    // 입고예정일 칸: 포커스 벗어나면 자동 변환
     tb.addEventListener('blur', e=>{
       if(e.target.classList && e.target.classList.contains('mp-pdate')){
         const v=e.target.value.trim();
         if(v) e.target.value=normMatDate(v);
       }
     }, true);
+    updateMatpSum();
   }
 }
 
-// 붙여넣기(Ctrl+V) → 행/열 자동 채우기
+function updateMatpSum(){
+  const tb=El('matp-tb'); if(!tb) return;
+  let q=0,c=0;
+  tb.querySelectorAll('tr').forEach(tr=>{
+    q+=Number((tr.querySelector('.mp-qty')?.value||'').replace(/,/g,''))||0;
+    c+=Number((tr.querySelector('.mp-carton')?.value||'').replace(/,/g,''))||0;
+  });
+  if(El('matp-sum-qty')) El('matp-sum-qty').textContent=fmt(q);
+  if(El('matp-sum-carton')) El('matp-sum-carton').textContent=fmt(c);
+}
+
 function attachMatpPaste(){
   const tb=El('matp-tb');
   tb.addEventListener('paste', e=>{
     const target=e.target;
     if(!target.dataset || target.dataset.c===undefined) return;
     const text=(e.clipboardData||window.clipboardData).getData('text');
-    if(!text || (text.indexOf('\t')===-1 && text.indexOf('\n')===-1)) return; // 단일 셀 붙여넣기는 기본 동작
+    if(!text || (text.indexOf('\t')===-1 && text.indexOf('\n')===-1)) return;
     e.preventDefault();
     const startRow=parseInt(target.closest('tr').dataset.r,10);
     const startCol=parseInt(target.dataset.c,10);
     const rows=text.replace(/\r/g,'').split('\n').filter((l,idx,arr)=> l!=='' || idx<arr.length-1);
-    // 필요한 행 수 확보
     ensureMatpRows(startRow+rows.length);
     rows.forEach((line,ri)=>{
       if(line==='') return;
@@ -3174,11 +3215,12 @@ function attachMatpPaste(){
         const inp=tr.querySelector(`input[data-c="${c}"]`);
         if(!inp) return;
         let v=val.trim();
-        if(c===0) v=normMatDate(v);                  // 입고예정일 변환
-        if(c>=4 && c<=8) v=v.replace(/[,\s]/g,'');    // 숫자 칸 콤마 제거
+        if(c===0) v=normMatDate(v);
+        if(c>=4 && c<=8) v=v.replace(/[,\s₩]/g,'');
         inp.value=v;
       });
     });
+    updateMatpSum();
     toast(rows.filter(r=>r!=='').length+'개 행이 입력되었습니다','ok');
   });
 }
@@ -3197,7 +3239,6 @@ function clearMatPlan(){
   toast('초기화되었습니다','inf');
 }
 
-// 입력된 행들을 수집 (품번 또는 품명이 있는 행만)
 function collectMatpRows(){
   const tb=El('matp-tb');
   const out=[];
@@ -3205,107 +3246,166 @@ function collectMatpRows(){
     const g=cls=>tr.querySelector('.'+cls)?.value.trim()||'';
     const pdate=normMatDate(g('mp-pdate'));
     const vendor=g('mp-vendor'), pno=g('mp-pno'), item=g('mp-item');
-    if(!pno && !item) return; // 빈 행 skip
+    if(!pno && !item) return;
     out.push({
       plan_date:pdate, vendor, p_no:pno, item,
       price:Number(g('mp-price').replace(/,/g,''))||0,
       qty:Number(g('mp-qty').replace(/,/g,''))||0,
       box_qty:Number(g('mp-box').replace(/,/g,''))||0,
       carton:Number(g('mp-carton').replace(/,/g,''))||0,
-      actual_qty:Number(g('mp-actual').replace(/,/g,''))||0,
-      status:'대기'
+      actual_qty:Number(g('mp-actual').replace(/,/g,''))||0
     });
   });
   return out;
 }
 
 async function saveMatPlan(){
-  const rows=collectMatpRows();
-  if(rows.length===0){ toast('입력된 자재가 없습니다','er'); return; }
+  const items=collectMatpRows();
+  if(items.length===0){ toast('입력된 자재가 없습니다','er'); return; }
+  const total_qty=items.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const total_carton=items.reduce((s,r)=>s+(Number(r.carton)||0),0);
   try{ showOv('저장 중...');
-    const payload=rows.map(r=>({...r, reg_user:(USERNAME||'')}));
-    const{error}=await db.from('material_orders').insert(payload);
+    const{error}=await db.from('material_orders').insert({
+      title:'캡슐 입고 내역', items, total_qty, total_carton,
+      item_count:items.length, status:'대기', reg_user:(USERNAME||'')
+    });
     if(error) throw new Error(error.message);
-    toast(rows.length+'건 저장 완료!','ok');
+    toast(items.length+'개 품목 저장 완료!','ok');
     clearMatPlan();
   }catch(e){ toast('저장 실패: '+e.message,'er'); }finally{hideOv();}
 }
 
-// ---------- 자재 입고 처리 ----------
+// ---------- 자재 입고 처리 (목록) ----------
 async function loadMatIn(){
   try{ showOv('로딩 중...');
     const{data,error}=await db.from('material_orders').select('*')
-      .order('plan_date',{ascending:true}).order('created_at',{ascending:true});
+      .order('created_at',{ascending:false});
     if(error) throw new Error(error.message);
-    _matInData=data||[]; renderMatIn();
+    _matInData=(data||[]).map(r=>({...r, items: typeof r.items==='string'?JSON.parse(r.items||'[]'):(r.items||[])}));
+    renderMatIn();
   }catch(e){ toast('오류: '+e.message,'er'); }finally{hideOv();}
 }
 
 function renderMatIn(){
   const kw=(El('mati-srch')?.value||'').toLowerCase();
   const sf=El('mati-status-filter')?.value||'';
-  let f=_matInData.filter(r=>
-    (!sf || (r.status||'대기')===sf) &&
-    (!kw || ((r.item||'')+(r.p_no||'')+(r.vendor||'')).toLowerCase().includes(kw))
-  );
+  let f=_matInData.filter(r=>{
+    if(sf && (r.status||'대기')!==sf) return false;
+    if(!kw) return true;
+    const hay=((r.title||'')+JSON.stringify(r.items||[])).toLowerCase();
+    return hay.includes(kw);
+  });
   El('mati-count').textContent='총 '+f.length+'건';
+  const sb=s=>s==='완료'?'so-badge-done':'so-badge-pending';
   El('mati-tb').innerHTML = f.length ? f.map(r=>{
     const st=r.status||'대기';
-    const badge=st==='완료'?'<span class="mat-badge done">완료</span>':'<span class="mat-badge wait">대기</span>';
     const btns=`
-      <button class="btn btn-def btn-sm" onclick="openMatEdit('${r.id}')">수정</button>
+      <button class="btn btn-pri btn-sm" onclick="viewMatIn('${r.id}')">보기</button>
+      <button class="btn btn-def btn-sm" onclick="editMatIn('${r.id}')">수정</button>
       ${st!=='완료'?`<button class="btn btn-gn btn-sm" onclick="completeMatIn('${r.id}')">완료</button>`:`<button class="btn btn-def btn-sm" onclick="reopenMatIn('${r.id}')">대기</button>`}
+      <button class="btn btn-def btn-sm" onclick="printMatRow('${r.id}')">출력</button>
       ${ROLE==='관리자'?`<button class="btn btn-rd btn-sm" onclick="delMatIn('${r.id}')">삭제</button>`:''}
     `;
     return `<tr>
-      <td class="td-date">${r.plan_date||'-'}</td>
-      <td>${r.vendor||'-'}</td>
-      <td class="td-pno">${r.p_no||'-'}</td>
-      <td class="td-item">${r.item||'-'}</td>
-      <td class="td-num">${fmt(r.price)}</td>
-      <td class="td-num">${fmt(r.qty)}</td>
-      <td class="td-num">${fmt(r.box_qty)}</td>
-      <td class="td-num">${fmt(r.carton)}</td>
-      <td class="td-num" style="font-weight:700">${fmt(r.actual_qty)}</td>
-      <td>${badge}</td>
+      <td class="td-date">${fmtDate(r.created_at)}</td>
+      <td class="td-item" style="text-align:left">${matEsc(r.title||'캡슐 입고 내역')}</td>
+      <td class="td-num">${fmt(r.item_count||(r.items||[]).length)}</td>
+      <td class="td-num">${fmt(r.total_qty)}</td>
+      <td class="td-num">${fmt(r.total_carton)}</td>
+      <td><span class="so-list-badge ${sb(st)}">${st}</span></td>
       <td class="no-print" style="display:flex;gap:4px;flex-wrap:wrap">${btns}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="11" style="text-align:center;color:var(--tx3);padding:32px">데이터 없음</td></tr>';
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--tx3);padding:32px">데이터 없음</td></tr>';
 }
 
-function openMatEdit(id){
+// 보기/수정 공통: 모달에 items 렌더
+function fillMatViewTable(items, editable){
+  let q=0,c=0;
+  const tb=El('mati-view-tb');
+  tb.innerHTML = (items||[]).map((it,i)=>{
+    q+=Number(it.qty)||0; c+=Number(it.carton)||0;
+    if(editable){
+      return `<tr data-vr="${i}">
+        <td><input class="mv-pdate" value="${matEsc(it.plan_date)}"></td>
+        <td><input class="mv-vendor" value="${matEsc(it.vendor)}"></td>
+        <td><input class="mv-pno" value="${matEsc(it.p_no)}"></td>
+        <td class="col-item"><input class="mv-item" value="${matEsc(it.item)}"></td>
+        <td class="col-num"><input class="mv-price" value="${matEsc(it.price)}"></td>
+        <td class="col-num"><input class="mv-qty" value="${matEsc(it.qty)}" oninput="updateMatViewSum()"></td>
+        <td class="col-num"><input class="mv-box" value="${matEsc(it.box_qty)}"></td>
+        <td class="col-num"><input class="mv-carton" value="${matEsc(it.carton)}" oninput="updateMatViewSum()"></td>
+        <td class="col-num"><input class="mv-actual" value="${matEsc(it.actual_qty)}"></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td>${matEsc(it.plan_date)}</td>
+      <td>${matEsc(it.vendor)}</td>
+      <td>${matEsc(it.p_no)}</td>
+      <td class="col-item" style="text-align:left">${matEsc(it.item)}</td>
+      <td class="col-num">${fmt(it.price)}</td>
+      <td class="col-num">${fmt(it.qty)}</td>
+      <td class="col-num">${fmt(it.box_qty)}</td>
+      <td class="col-num">${fmt(it.carton)}</td>
+      <td class="col-num">${fmt(it.actual_qty)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--tx3);padding:24px">품목 없음</td></tr>';
+  El('mati-view-sum-qty').textContent=fmt(q);
+  El('mati-view-sum-carton').textContent=fmt(c);
+}
+
+function updateMatViewSum(){
+  const tb=El('mati-view-tb'); let q=0,c=0;
+  tb.querySelectorAll('tr').forEach(tr=>{
+    q+=Number((tr.querySelector('.mv-qty')?.value||'').replace(/,/g,''))||0;
+    c+=Number((tr.querySelector('.mv-carton')?.value||'').replace(/,/g,''))||0;
+  });
+  El('mati-view-sum-qty').textContent=fmt(q);
+  El('mati-view-sum-carton').textContent=fmt(c);
+}
+
+function viewMatIn(id){
   const r=_matInData.find(x=>x.id===id); if(!r) return;
+  _matViewMode='view';
   El('me-id').value=r.id;
-  El('me-pdate').value=r.plan_date||'';
-  El('me-vendor').value=r.vendor||'';
-  El('me-pno').value=r.p_no||'';
-  El('me-item').value=r.item||'';
-  El('me-price').value=r.price||0;
-  El('me-qty').value=r.qty||0;
-  El('me-box').value=r.box_qty||0;
-  El('me-carton').value=r.carton||0;
-  El('me-actual').value=r.actual_qty||0;
+  El('mati-modal-title').textContent='자재 입고 내역 (보기)  ·  '+fmtDate(r.created_at)+'  ·  '+(r.status||'대기');
+  El('mati-modal-save').style.display='none';
+  fillMatViewTable(r.items, false);
   El('mati-modal').style.display='flex';
 }
+
+function editMatIn(id){
+  const r=_matInData.find(x=>x.id===id); if(!r) return;
+  _matViewMode='edit';
+  El('me-id').value=r.id;
+  El('mati-modal-title').textContent='자재 입고 내역 (수정)';
+  El('mati-modal-save').style.display='';
+  fillMatViewTable(r.items, true);
+  El('mati-modal').style.display='flex';
+}
+
 function closeMatEdit(){ El('mati-modal').style.display='none'; }
 
 async function saveMatEdit(){
   const id=El('me-id').value;
-  const num=v=>Number(String(v).replace(/,/g,''))||0;
-  const upd={
-    plan_date:normMatDate(El('me-pdate').value.trim()),
-    vendor:El('me-vendor').value.trim(),
-    p_no:El('me-pno').value.trim(),
-    item:El('me-item').value.trim(),
-    price:num(El('me-price').value),
-    qty:num(El('me-qty').value),
-    box_qty:num(El('me-box').value),
-    carton:num(El('me-carton').value),
-    actual_qty:num(El('me-actual').value),
-    updated_at:new Date().toISOString()
-  };
+  const num=v=>Number(String(v||'').replace(/,/g,''))||0;
+  const items=[];
+  El('mati-view-tb').querySelectorAll('tr[data-vr]').forEach(tr=>{
+    const g=cls=>tr.querySelector('.'+cls)?.value.trim()||'';
+    items.push({
+      plan_date:normMatDate(g('mv-pdate')), vendor:g('mv-vendor'),
+      p_no:g('mv-pno'), item:g('mv-item'),
+      price:num(g('mv-price')), qty:num(g('mv-qty')),
+      box_qty:num(g('mv-box')), carton:num(g('mv-carton')),
+      actual_qty:num(g('mv-actual'))
+    });
+  });
+  const total_qty=items.reduce((s,r)=>s+r.qty,0);
+  const total_carton=items.reduce((s,r)=>s+r.carton,0);
   try{ showOv('저장 중...');
-    const{error}=await db.from('material_orders').update(upd).eq('id',id);
+    const{error}=await db.from('material_orders').update({
+      items, total_qty, total_carton, item_count:items.length,
+      updated_at:new Date().toISOString()
+    }).eq('id',id);
     if(error) throw new Error(error.message);
     toast('수정 완료!','ok'); closeMatEdit(); await loadMatIn();
   }catch(e){ toast('실패: '+e.message,'er'); }finally{hideOv();}
@@ -3326,7 +3426,7 @@ async function reopenMatIn(id){
   }catch(e){ toast('실패: '+e.message,'er'); }finally{hideOv();}
 }
 async function delMatIn(id){
-  if(!confirm('이 자재 내역을 삭제하시겠습니까?')) return;
+  if(!confirm('이 입고 내역을 삭제하시겠습니까?')) return;
   try{ showOv('삭제 중...');
     const{error}=await db.from('material_orders').delete().eq('id',id);
     if(error) throw new Error(error.message);
@@ -3334,9 +3434,22 @@ async function delMatIn(id){
   }catch(e){ toast('실패: '+e.message,'er'); }finally{hideOv();}
 }
 
+// 출력: 보기 모달을 열고 인쇄
+function printMatRow(id){ viewMatIn(id); setTimeout(()=>printMatModal(),200); }
+function printMatModal(){
+  document.body.classList.add('mat-print');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('mat-print'),300);
+}
+
 function dlMatInXls(){
-  const rows=_matInData.map(r=>[r.plan_date,r.vendor,r.p_no,r.item,r.price,r.qty,r.box_qty,r.carton,r.actual_qty,r.status||'대기']);
-  dlXls([['입고예정일','업체','품번','품명','판매가','수량','박스수량','카톤수','실제입고','상태'],...rows],'자재입고내역');
+  const rows=[];
+  _matInData.forEach(r=>{
+    (r.items||[]).forEach(it=>{
+      rows.push([fmtDate(r.created_at), r.status||'대기', it.plan_date, it.vendor, it.p_no, it.item, it.price, it.qty, it.box_qty, it.carton, it.actual_qty]);
+    });
+  });
+  dlXls([['등록일','상태','입고예정일','업체','품번','품명','판매가','수량','박스','카톤','실제입고'],...rows],'자재입고내역');
 }
 
 // ========== 수주 알람 (1분 갱신) ==========
