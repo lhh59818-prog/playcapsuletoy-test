@@ -371,7 +371,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .mat-tw{overflow:auto;max-height:calc(100vh - 170px)}
 .mat-table{width:100%;border-collapse:collapse;font-size:11px}
 .mat-table thead th{background:#dbe4f3;color:#1a2b4a;padding:5px 4px;text-align:center;font-weight:700;border:1px solid #b8c6e0;white-space:nowrap;position:sticky;top:0;z-index:2;font-size:11px}
-.mat-table tbody td{border:1px solid #e3e8f0;padding:0;height:24px}
+.mat-table tbody td{border:1px solid #c8d2e0;padding:0;height:24px}
 .mat-table tbody td input{width:100%;height:100%;border:none;background:transparent;padding:2px 5px;font-size:11px;font-family:'Noto Sans KR',sans-serif;color:var(--tx);text-align:center}
 .mat-table tbody td input:focus{outline:2px solid var(--ac);outline-offset:-2px;background:#fff}
 .mat-table tbody tr:nth-child(even){background:#fafbfc}
@@ -383,6 +383,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .mat-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700}
 .mat-badge.wait{background:var(--yw-bg);color:var(--yw)}
 .mat-badge.done{background:var(--gn-bg);color:var(--gn)}
+/* 신규 알림 배지 (그라데이션 반짝임) */
+.new-badge{display:inline-block;margin-left:6px;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;color:#fff;
+  background:linear-gradient(90deg,#ff8a3d,#ffb347,#ff8a3d);background-size:200% 100%;
+  animation:badgeShine 1.6s linear infinite, badgePulse 1.6s ease-in-out infinite;
+  box-shadow:0 0 6px rgba(255,150,60,.6)}
+@keyframes badgeShine{0%{background-position:0% 0}100%{background-position:-200% 0}}
+@keyframes badgePulse{0%,100%{transform:scale(1);box-shadow:0 0 6px rgba(255,150,60,.5)}50%{transform:scale(1.08);box-shadow:0 0 12px rgba(255,150,60,.9)}}
 </style>
 </head>
 <body>
@@ -413,11 +420,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="nav" onclick="go('dash2')" data-p="dash2"><i class="nav-ic">◈</i> 대시보드</div>
   <div class="sb-sec sec-sales">영업 관리</div>
   <div class="nav" id="nav-so-reg" onclick="go('so-reg')" data-p="so-reg"><i class="nav-ic">✎</i> 수주 등록</div>
-  <div class="nav" id="nav-so-list" onclick="go('so-list')" data-p="so-list"><i class="nav-ic">≡</i> 수주 조회<span id="so-nav-badge" style="display:none;margin-left:6px;background:#f6c90e;color:#7a4f00;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700"></span></div>
+  <div class="nav" id="nav-so-list" onclick="go('so-list')" data-p="so-list"><i class="nav-ic">≡</i> 수주 조회<span id="so-nav-badge" class="new-badge" style="display:none"></span></div>
   <div class="nav" id="nav-so-proc" onclick="go('so-proc')" data-p="so-proc"><i class="nav-ic">✔</i> 수주 처리</div>
   <div class="sb-sec sec-sales">자재 관리</div>
   <div class="nav" id="nav-mat-plan" onclick="go('mat-plan')" data-p="mat-plan"><i class="nav-ic">📦</i> 입고 예정 자재</div>
-  <div class="nav" id="nav-mat-in" onclick="go('mat-in')" data-p="mat-in"><i class="nav-ic">✔</i> 자재 입고 처리</div>
+  <div class="nav" id="nav-mat-in" onclick="go('mat-in')" data-p="mat-in"><i class="nav-ic">✔</i> 자재 입고 처리<span id="mat-nav-badge" class="new-badge" style="display:none"></span></div>
   <div class="sb-sec sec-inv">재고 관리</div>
   <div class="nav" onclick="go('stock')" data-p="stock"><i class="nav-ic">◉</i> 재고 조회</div>
   <div class="nav" id="nav-in" onclick="go('in')" data-p="in"><i class="nav-ic">↓</i> 입고 등록</div>
@@ -447,9 +454,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button id="sb-btn" onclick="toggleSb()">☰</button>
     <span id="pg-title" style="font-size:14px;font-weight:600;color:var(--tx)">대시보드</span>
     <div class="tb-r">
-  <div id="so-alert" onclick="go('so-proc')" style="display:none;cursor:pointer;background:#fef3cd;color:#b45309;border:1px solid #f6c90e;border-radius:14px;padding:4px 12px;font-size:11px;font-weight:600;align-items:center;gap:6px;margin-right:6px">
-    <span>신규 수주 <span id="so-alert-cnt">0</span>건</span>
-  </div>
+  <div id="so-alert" style="display:none!important"></div>
   <div class="dot ld" id="dot"></div><span id="dot-txt">연결 중...</span>
 </div>
   </div>
@@ -3052,7 +3057,9 @@ function renderSoList(){
     const delBtn = isAdmin ? `<button class="btn btn-rd btn-sm" onclick="delSoById('${r.id}')">삭제</button>` : '';
     // 금액: so-reg 권한자(등록자)만 표시, 나머지는 숨김
     const supplyCell = canSoReg ? `<td class="td-num" style="color:var(--rd)">${r.total_supply?'₩'+Number(r.total_supply).toLocaleString():'-'}</td><td class="td-num" style="font-weight:700">${r.total_sum?'₩'+Number(r.total_sum).toLocaleString():'-'}</td>` : `<td class="td-num" style="color:var(--tx3)">-</td><td class="td-num" style="color:var(--tx3)">-</td>`;
-    return`<tr><td class="td-date">${r.issue_date||'-'}</td><td>${ft}</td><td>${r.buyer_name||'-'}</td><td class="td-item">${fi.name}${more>0?' 외 '+more+'건':''}</td><td class="td-num">${fmt(items.reduce((s,i)=>s+(Number(i.qty)||0),0))}</td>${supplyCell}<td><span class="so-list-badge ${sb(r.status)}">${r.status||'대기'}</span></td><td>${r.reg_user||'-'}</td><td>${r.confirm_user||'-'}</td><td style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="viewSo('${r.id}')">보기</button><button class="btn btn-def btn-sm" onclick="editSo('${r.id}')">수정</button><button class="btn btn-def btn-sm no-print" onclick="printSoRow('${r.id}')">출력</button>${delBtn}</td></tr>`;
+    const soLocked = (r.status==='완료') && !isAdmin;
+    const editSoBtn = soLocked ? '' : `<button class="btn btn-def btn-sm" onclick="editSo('${r.id}')">수정</button>`;
+    return`<tr><td class="td-date">${r.issue_date||'-'}</td><td>${ft}</td><td>${r.buyer_name||'-'}</td><td class="td-item">${fi.name}${more>0?' 외 '+more+'건':''}</td><td class="td-num">${fmt(items.reduce((s,i)=>s+(Number(i.qty)||0),0))}</td>${supplyCell}<td><span class="so-list-badge ${sb(r.status)}">${r.status||'대기'}</span></td><td>${r.reg_user||'-'}</td><td>${r.confirm_user||'-'}</td><td style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="viewSo('${r.id}')">보기</button>${editSoBtn}<button class="btn btn-def btn-sm no-print" onclick="printSoRow('${r.id}')">출력</button>${delBtn}</td></tr>`;
   }).join(''):'<tr><td colspan="11" style="text-align:center;color:var(--tx3);padding:32px">수주 없음</td></tr>';
 }
 
@@ -3115,6 +3122,7 @@ function renderSoProc(){
 }
 
 async function updateSoStatus(id,status){
+  if(status==='완료' && !confirm('완료하시겠습니까?\n완료 후에는 관리자만 수정/삭제할 수 있습니다.')) return;
   try{ showOv('처리 중...');
     const row = _soProcData.find(r=>r.id===id);
     const upd={status,updated_at:new Date().toISOString()};
@@ -3157,6 +3165,12 @@ function normMatDate(raw){
 
 const matEsc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+// 숫자 입력칸 콤마 자동
+function matComma(inp){
+  const raw=inp.value.replace(/[^\d]/g,'');
+  inp.value = raw ? Number(raw).toLocaleString() : '';
+}
+
 // ---------- 입고 예정 자재 (입력 폼) ----------
 function matpRowHtml(i){
   return `<tr data-r="${i}">
@@ -3164,7 +3178,7 @@ function matpRowHtml(i){
     <td><input class="mp-vendor" data-c="1"></td>
     <td><input class="mp-pno" data-c="2"></td>
     <td class="col-item"><input class="mp-item" data-c="3"></td>
-    <td class="col-num"><input class="mp-price" data-c="4"></td>
+    <td class="col-num"><input class="mp-price" data-c="4" oninput="matComma(this)"></td>
     <td class="col-num"><input class="mp-qty" data-c="5" oninput="updateMatpSum()"></td>
     <td class="col-num"><input class="mp-box" data-c="6"></td>
     <td class="col-num"><input class="mp-carton" data-c="7" oninput="updateMatpSum()"></td>
@@ -3280,6 +3294,7 @@ async function saveMatPlan(){
     if(error) throw new Error(error.message);
     toast(items.length+'개 품목 저장 완료!','ok');
     clearMatPlan();
+    checkMatAlert();
   }catch(e){ toast('저장 실패: '+e.message,'er'); }finally{hideOv();}
 }
 
@@ -3291,6 +3306,7 @@ async function loadMatIn(){
     if(error) throw new Error(error.message);
     _matInData=(data||[]).map(r=>({...r, items: typeof r.items==='string'?JSON.parse(r.items||'[]'):(r.items||[])}));
     renderMatIn();
+    markMatSeen();
   }catch(e){ toast('오류: '+e.message,'er'); }finally{hideOv();}
 }
 
@@ -3307,12 +3323,19 @@ function renderMatIn(){
   const sb=s=>s==='완료'?'so-badge-done':'so-badge-pending';
   El('mati-tb').innerHTML = f.length ? f.map(r=>{
     const st=r.status||'대기';
+    const isAdmin=ROLE==='관리자';
+    const locked = st==='완료' && !isAdmin; // 완료 + 비관리자 => 잠금
+    const editBtn = locked ? '' : `<button class="btn btn-def btn-sm" onclick="editMatIn('${r.id}')">수정</button>`;
+    const statusBtn = st!=='완료'
+      ? `<button class="btn btn-gn btn-sm" onclick="completeMatIn('${r.id}')">완료</button>`
+      : (isAdmin ? `<button class="btn btn-def btn-sm" onclick="reopenMatIn('${r.id}')">대기</button>` : '');
+    const delBtn = (isAdmin) ? `<button class="btn btn-rd btn-sm" onclick="delMatIn('${r.id}')">삭제</button>` : '';
     const btns=`
       <button class="btn btn-pri btn-sm" onclick="viewMatIn('${r.id}')">보기</button>
-      <button class="btn btn-def btn-sm" onclick="editMatIn('${r.id}')">수정</button>
-      ${st!=='완료'?`<button class="btn btn-gn btn-sm" onclick="completeMatIn('${r.id}')">완료</button>`:`<button class="btn btn-def btn-sm" onclick="reopenMatIn('${r.id}')">대기</button>`}
+      ${editBtn}
+      ${statusBtn}
       <button class="btn btn-def btn-sm" onclick="printMatRow('${r.id}')">출력</button>
-      ${ROLE==='관리자'?`<button class="btn btn-rd btn-sm" onclick="delMatIn('${r.id}')">삭제</button>`:''}
+      ${delBtn}
     `;
     return `<tr>
       <td class="td-date">${fmtDate(r.created_at)}</td>
@@ -3352,7 +3375,7 @@ function fillMatViewTable(items, editable){
       <td>${matEsc(it.vendor)}</td>
       <td>${matEsc(it.p_no)}</td>
       <td class="col-item" style="text-align:left">${matEsc(it.item)}</td>
-      <td class="col-num">${fmt(it.price)}</td>
+      <td class="col-num">₩${fmt(it.price)}</td>
       <td class="col-num">${fmt(it.qty)}</td>
       <td class="col-num">${fmt(it.box_qty)}</td>
       <td class="col-num">${fmt(it.carton)}</td>
@@ -3422,6 +3445,7 @@ async function saveMatEdit(){
 }
 
 async function completeMatIn(id){
+  if(!confirm('완료하시겠습니까?\n완료 후에는 관리자만 수정/삭제할 수 있습니다.')) return;
   try{ showOv('처리 중...');
     const{error}=await db.from('material_orders').update({status:'완료',confirm_user:(USERNAME||''),updated_at:new Date().toISOString()}).eq('id',id);
     if(error) throw new Error(error.message);
@@ -3469,7 +3493,7 @@ function printMatData(r){
     q+=Number(it.qty)||0; c+=Number(it.carton)||0;
     return `<tr>
       <td>${matEsc(it.plan_date)}</td><td>${matEsc(it.vendor)}</td><td>${matEsc(it.p_no)}</td>
-      <td class="l">${matEsc(it.item)}</td><td class="r">${fmt(it.price)}</td><td class="r">${fmt(it.qty)}</td>
+      <td class="l">${matEsc(it.item)}</td><td class="r">₩${fmt(it.price)}</td><td class="r">${fmt(it.qty)}</td>
       <td class="r">${fmt(it.box_qty)}</td><td class="r">${fmt(it.carton)}</td><td class="r">${fmt(it.actual_qty)}</td>
     </tr>`;
   }).join('');
@@ -3679,31 +3703,12 @@ async function checkSoAlert(){
     if(error) return;
     const list=data||[];
     const currentIds=new Set(list.map(r=>r.id));
-    let newCount=0;
-    list.forEach(r=>{ if(!_soAlertSeenIds.has(r.id)) newCount++; });
     const totalPending=list.length;
-    const badge=El('so-alert');
-    const cnt=El('so-alert-cnt');
-    if(totalPending>0){
-      if(badge){ badge.style.display='inline-flex'; }
-      if(cnt) cnt.textContent=totalPending;
-      const navBadge=El('so-nav-badge');
-      if(navBadge){ navBadge.style.display='inline'; navBadge.textContent='신규 '+totalPending+'건'; }
-    } else {
-      if(badge){ badge.style.display='none'; }
-      const navBadge=El('so-nav-badge');
-      if(navBadge){ navBadge.style.display='none'; }
-    }
-    // ★ 최초 로드 시 대기 수주 있으면 모달 표시, 이후엔 새로 추가된 건만
-    if(newCount>0){
-      if(_soAlertSeenIds.size===0){
-        // 최초: 전체 대기건 모달
-        if(totalPending>0) showSoAlertModal(totalPending);
-      } else {
-        // 이후: 신규 추가건만
-        toast('신규 수주 '+newCount+'건이 도착했습니다','inf');
-        showSoAlertModal(newCount);
-      }
+    // 사이드바 nav 배지만 표시 (우상단 배지/중앙 모달은 제거됨)
+    const navBadge=El('so-nav-badge');
+    if(navBadge){
+      if(totalPending>0){ navBadge.style.display='inline'; navBadge.textContent='신규 '+totalPending+'건'; }
+      else navBadge.style.display='none';
     }
     _soAlertSeenIds=currentIds;
   }catch(e){ console.warn('수주 알람 체크 오류:',e); }
@@ -3712,13 +3717,44 @@ async function checkSoAlert(){
 function startSoAlert(){
   if(_soAlertTimer) clearInterval(_soAlertTimer);
   checkSoAlert();
-  _soAlertTimer=setInterval(checkSoAlert,60000); // 1분
+  checkMatAlert();
+  _soAlertTimer=setInterval(()=>{ checkSoAlert(); checkMatAlert(); },60000); // 1분
 }
 
 function stopSoAlert(){
   if(_soAlertTimer){ clearInterval(_soAlertTimer); _soAlertTimer=null; }
   const badge=El('so-alert'); if(badge) badge.style.display='none';
   _soAlertSeenIds=new Set();
+  _matAlertSeenIds=new Set();
+}
+
+// ===== 자재 입고 처리 신규 알림 (B방식: 안 본 신규) =====
+let _matAlertSeenIds=new Set();
+let _matAlertInit=false;
+async function checkMatAlert(){
+  try{
+    const {data,error}=await db.from('material_orders').select('id,status').eq('status','대기').order('created_at',{ascending:false}).limit(100);
+    if(error) return;
+    const list=data||[];
+    const ids=new Set(list.map(r=>r.id));
+    if(!_matAlertInit){
+      // 최초 1회: 기존 대기건은 모두 '본 것'으로 처리 (알림 안 띄움)
+      _matAlertSeenIds=ids; _matAlertInit=true;
+    }
+    // 안 본 신규 건수
+    let newCount=0; ids.forEach(id=>{ if(!_matAlertSeenIds.has(id)) newCount++; });
+    const badge=El('mat-nav-badge');
+    if(badge){
+      if(newCount>0){ badge.style.display='inline-block'; badge.textContent='신규 '+newCount+'건'; }
+      else badge.style.display='none';
+    }
+  }catch(e){ console.warn('자재 알람 체크 오류:',e); }
+}
+// 자재 입고 처리 페이지를 열면 현재 대기건을 모두 본 것으로 처리 → 배지 사라짐
+function markMatSeen(){
+  const ids=new Set((_matInData||[]).filter(r=>(r.status||'대기')==='대기').map(r=>r.id));
+  _matAlertSeenIds=ids; _matAlertInit=true;
+  const badge=El('mat-nav-badge'); if(badge) badge.style.display='none';
 }
 
 </script>
