@@ -1069,10 +1069,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
             <div class="mat-doc-head">
               <div class="mat-doc-title">캡 슐 입 고 내 역</div>
             </div>
-            <div class="mat-tw"><table class="mat-table" id="matp-table" style="table-layout:fixed">
+            <div class="mat-tw"><table class="mat-table" id="matp-table" style="table-layout:fixed;width:auto;min-width:0">
               <colgroup>
-                <col style="width:62px"><col style="width:62px"><col style="width:108px"><col>
-                <col style="width:52px"><col style="width:40px"><col style="width:48px"><col style="width:42px"><col style="width:62px">
+                <col style="width:72px"><col style="width:80px"><col style="width:120px"><col style="width:320px">
+                <col style="width:80px"><col style="width:55px"><col style="width:55px"><col style="width:50px"><col style="width:70px">
               </colgroup>
               <thead><tr>
                 <th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th>
@@ -1525,9 +1525,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
       </svg>
       <div class="so-alert-pulse"></div>
     </div>
-    <div class="so-alert-title">신규 수주 도착</div>
+    <div class="so-alert-title" id="so-alert-mo-title">신규 수주 도착</div>
     <div id="so-alert-mo-msg" class="so-alert-msg"></div>
-    <button class="so-alert-btn" onclick="goSoFromAlert()">바로 확인하기</button>
+    <button class="so-alert-btn" id="so-alert-mo-btn" onclick="goSoFromAlert()">바로 확인하기</button>
     <div class="so-alert-hint">바깥을 클릭하면 닫힙니다</div>
   </div>
 </div>
@@ -3035,6 +3035,10 @@ async function loadSoList(){
     if(kw) q=q.ilike('buyer_name','%'+kw+'%');
     const{data,error}=await q; if(error) throw new Error(error.message);
     _soData=data||[]; renderSoList();
+    // 수주조회 페이지를 열면 현재 대기건을 모두 본 것으로 처리 → 배지 제거
+    _soAlertSeenIds=new Set((_soData||[]).filter(r=>(r.status||'대기')==='대기').map(r=>r.id));
+    _soAlertInit=true;
+    const nb=El('so-nav-badge'); if(nb) nb.style.display='none';
   }catch(e){toast('오류: '+e.message,'er');}finally{hideOv();}
 }
 
@@ -3237,8 +3241,18 @@ function attachMatpPaste(){
         const inp=tr.querySelector(`input[data-c="${c}"]`);
         if(!inp) return;
         let v=val.trim();
-        if(c===0) v=normMatDate(v);
-        if(c>=4 && c<=8) v=v.replace(/[,\s₩]/g,'');
+        if(c===0){ v=normMatDate(v); }
+        else if(c>=4 && c<=8){
+          // 콤마/공백/원화 제거 후 숫자화
+          let num=v.replace(/[,\s₩]/g,'');
+          // 소수점 끝 0 제거 (5.0 → 5, 40.0 → 40, 5.50 → 5.5)
+          if(/^\d*\.\d+$/.test(num)){ num=String(parseFloat(num)); }
+          v=num;
+          if(c===4 && v!==''){ // 판매가: 콤마 적용
+            const n=Number(v.replace(/,/g,''));
+            v = isNaN(n) ? v : n.toLocaleString();
+          }
+        }
         inp.value=v;
       });
     });
@@ -3679,17 +3693,27 @@ function printSoView(){
   w.document.close();
 }
 
-// 신규 수주 중앙 알림 모달 ==========
+// 신규 알림 중앙 모달 (수주/자재 공용) ==========
 let _soAlertModalShown = false;
-function showSoAlertModal(count){
-  El('so-alert-mo-msg').textContent = '대기 중인 신규 수주 ' + count + '건이 있습니다.';
+let _alertModalTarget = 'so-proc';
+function showSoAlertModal(count, kind){
+  kind = kind || 'so';
+  if(kind==='mat'){
+    El('so-alert-mo-title').textContent = '신규 입고 예정 자재 도착';
+    El('so-alert-mo-msg').textContent = '새로 등록된 입고 예정 자재 ' + count + '건이 있습니다.';
+    _alertModalTarget = 'mat-in';
+  } else {
+    El('so-alert-mo-title').textContent = '신규 수주 도착';
+    El('so-alert-mo-msg').textContent = '대기 중인 신규 수주 ' + count + '건이 있습니다.';
+    _alertModalTarget = 'so-proc';
+  }
   El('so-alert-mo').classList.add('show');
   _soAlertModalShown = true;
 }
 
 function goSoFromAlert(){
   dismissSoAlertModal();
-  go('so-proc');
+  go(_alertModalTarget);
 }
 
 function dismissSoAlertModal(){
@@ -3697,19 +3721,26 @@ function dismissSoAlertModal(){
   _soAlertModalShown = false;
 }
 
+let _soAlertInit=false;
 async function checkSoAlert(){
   try{
     const {data,error}=await db.from('sales_orders').select('id,buyer_name,created_at,status').eq('status','대기').order('created_at',{ascending:false}).limit(50);
     if(error) return;
     const list=data||[];
     const currentIds=new Set(list.map(r=>r.id));
-    const totalPending=list.length;
-    // 사이드바 nav 배지만 표시 (우상단 배지/중앙 모달은 제거됨)
+    // 최초 로드: 기존 대기건은 모두 '본 것'으로 처리 (배지/모달 안 띄움)
+    if(!_soAlertInit){ _soAlertSeenIds=currentIds; _soAlertInit=true;
+      const nb=El('so-nav-badge'); if(nb) nb.style.display='none';
+      return;
+    }
+    // 안 본 신규 건수
+    let newCount=0; currentIds.forEach(id=>{ if(!_soAlertSeenIds.has(id)) newCount++; });
     const navBadge=El('so-nav-badge');
     if(navBadge){
-      if(totalPending>0){ navBadge.style.display='inline'; navBadge.textContent='신규 '+totalPending+'건'; }
+      if(newCount>0){ navBadge.style.display='inline-block'; navBadge.textContent='신규 '+newCount+'건'; }
       else navBadge.style.display='none';
     }
+    if(newCount>0){ showSoAlertModal(newCount); }
     _soAlertSeenIds=currentIds;
   }catch(e){ console.warn('수주 알람 체크 오류:',e); }
 }
@@ -3740,6 +3771,8 @@ async function checkMatAlert(){
     if(!_matAlertInit){
       // 최초 1회: 기존 대기건은 모두 '본 것'으로 처리 (알림 안 띄움)
       _matAlertSeenIds=ids; _matAlertInit=true;
+      const b=El('mat-nav-badge'); if(b) b.style.display='none';
+      return;
     }
     // 안 본 신규 건수
     let newCount=0; ids.forEach(id=>{ if(!_matAlertSeenIds.has(id)) newCount++; });
@@ -3748,6 +3781,8 @@ async function checkMatAlert(){
       if(newCount>0){ badge.style.display='inline-block'; badge.textContent='신규 '+newCount+'건'; }
       else badge.style.display='none';
     }
+    if(newCount>0){ showSoAlertModal(newCount,'mat'); }
+    _matAlertSeenIds=ids;
   }catch(e){ console.warn('자재 알람 체크 오류:',e); }
 }
 // 자재 입고 처리 페이지를 열면 현재 대기건을 모두 본 것으로 처리 → 배지 사라짐
