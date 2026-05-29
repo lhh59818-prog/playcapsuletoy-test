@@ -365,7 +365,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #login-wrap .login-err{margin-top:10px;font-size:11.5px;color:#dc2626;text-align:center;min-height:16px}
 
 /* 자재관리 */
-.mat-doc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
+.mat-doc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);display:inline-block;max-width:100%;vertical-align:top}
 .mat-doc-head{padding:10px 16px;border-bottom:2px solid var(--ac)}
 .mat-doc-title{font-size:16px;font-weight:800;letter-spacing:2px;color:var(--tx)}
 .mat-tw{overflow:auto;max-height:calc(100vh - 170px)}
@@ -1080,10 +1080,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
               </tr></thead>
               <tbody id="matp-tb"></tbody>
               <tfoot><tr class="mat-foot">
-                <td colspan="5" style="text-align:right;font-weight:700">합계</td>
-                <td class="col-num" id="matp-sum-qty" style="font-weight:700">0</td>
+                <td colspan="5" style="text-align:center;font-weight:700">합계</td>
+                <td id="matp-sum-qty" style="font-weight:700;text-align:center">0</td>
                 <td></td>
-                <td class="col-num" id="matp-sum-carton" style="font-weight:700">0</td>
+                <td id="matp-sum-carton" style="font-weight:700;text-align:center">0</td>
                 <td></td>
               </tr></tfoot>
             </table></div>
@@ -1141,10 +1141,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
             </tr></thead>
             <tbody id="mati-view-tb"></tbody>
             <tfoot><tr class="mat-foot">
-              <td colspan="5" style="text-align:right;font-weight:700">합계</td>
-              <td class="col-num" id="mati-view-sum-qty" style="font-weight:700">0</td>
+              <td colspan="5" style="text-align:center;font-weight:700">합계</td>
+              <td id="mati-view-sum-qty" style="font-weight:700;text-align:center">0</td>
               <td></td>
-              <td class="col-num" id="mati-view-sum-carton" style="font-weight:700">0</td>
+              <td id="mati-view-sum-carton" style="font-weight:700;text-align:center">0</td>
               <td></td>
             </tr></tfoot>
           </table></div>
@@ -3035,10 +3035,9 @@ async function loadSoList(){
     if(kw) q=q.ilike('buyer_name','%'+kw+'%');
     const{data,error}=await q; if(error) throw new Error(error.message);
     _soData=data||[]; renderSoList();
-    // 수주조회 페이지를 열면 현재 대기건을 모두 본 것으로 처리 → 배지 제거
+    // 모달 중복방지용 seen 처리 (배지는 완료해야만 감소)
     _soAlertSeenIds=new Set((_soData||[]).filter(r=>(r.status||'대기')==='대기').map(r=>r.id));
     _soAlertInit=true;
-    const nb=El('so-nav-badge'); if(nb) nb.style.display='none';
   }catch(e){toast('오류: '+e.message,'er');}finally{hideOv();}
 }
 
@@ -3138,13 +3137,14 @@ async function updateSoStatus(id,status){
     // 히스토리 기록
     if(row){ await logSoHistory({...row, status}, '수주 '+status); }
     await loadSoProc();
+    checkSoAlert();
   }catch(e){toast('실패: '+e.message,'er');}finally{hideOv();}
 }
 
 // ============================================================
 // 자재 관리 (입고 예정 자재 / 자재 입고 처리) - batch 구조
 // ============================================================
-const MATP_ROWS = 30; // 기본 행 수
+const MATP_ROWS = 50; // 기본 행 수
 let _matInData = [];
 let _matViewMode = 'view'; // 'view' | 'edit'
 
@@ -3321,6 +3321,9 @@ async function loadMatIn(){
     _matInData=(data||[]).map(r=>({...r, items: typeof r.items==='string'?JSON.parse(r.items||'[]'):(r.items||[])}));
     renderMatIn();
     markMatSeen();
+    // 배지: 미완료 대기 건수로 갱신 (완료하면 즉시 감소)
+    const pend=_matInData.filter(r=>(r.status||'대기')==='대기').length;
+    const b=El('mat-nav-badge'); if(b){ if(pend>0){ b.style.display='inline-block'; b.textContent='신규 '+pend+'건'; } else b.style.display='none'; }
   }catch(e){ toast('오류: '+e.message,'er'); }finally{hideOv();}
 }
 
@@ -3724,24 +3727,24 @@ function dismissSoAlertModal(){
 let _soAlertInit=false;
 async function checkSoAlert(){
   try{
-    const {data,error}=await db.from('sales_orders').select('id,buyer_name,created_at,status').eq('status','대기').order('created_at',{ascending:false}).limit(50);
+    const {data,error}=await db.from('sales_orders').select('id,buyer_name,created_at,status').eq('status','대기').order('created_at',{ascending:false}).limit(200);
     if(error) return;
     const list=data||[];
     const currentIds=new Set(list.map(r=>r.id));
-    // 최초 로드: 기존 대기건은 모두 '본 것'으로 처리 (배지/모달 안 띄움)
-    if(!_soAlertInit){ _soAlertSeenIds=currentIds; _soAlertInit=true;
-      const nb=El('so-nav-badge'); if(nb) nb.style.display='none';
-      return;
-    }
-    // 안 본 신규 건수
-    let newCount=0; currentIds.forEach(id=>{ if(!_soAlertSeenIds.has(id)) newCount++; });
+    const totalPending=list.length;
+    // 배지: 미완료(대기) 전체 건수 — 수주 처리에서 완료해야만 감소
     const navBadge=El('so-nav-badge');
     if(navBadge){
-      if(newCount>0){ navBadge.style.display='inline-block'; navBadge.textContent='신규 '+newCount+'건'; }
+      if(totalPending>0){ navBadge.style.display='inline-block'; navBadge.textContent='신규 '+totalPending+'건'; }
       else navBadge.style.display='none';
     }
-    if(newCount>0){ showSoAlertModal(newCount); }
-    _soAlertSeenIds=currentIds;
+    // 중앙 모달: 최초 로드 후 새로 추가된 신규건이 있을 때만
+    if(!_soAlertInit){ _soAlertSeenIds=currentIds; _soAlertInit=true; }
+    else {
+      let newCount=0; currentIds.forEach(id=>{ if(!_soAlertSeenIds.has(id)) newCount++; });
+      if(newCount>0){ showSoAlertModal(newCount,'so'); }
+      _soAlertSeenIds=currentIds;
+    }
   }catch(e){ console.warn('수주 알람 체크 오류:',e); }
 }
 
@@ -3764,32 +3767,30 @@ let _matAlertSeenIds=new Set();
 let _matAlertInit=false;
 async function checkMatAlert(){
   try{
-    const {data,error}=await db.from('material_orders').select('id,status').eq('status','대기').order('created_at',{ascending:false}).limit(100);
+    const {data,error}=await db.from('material_orders').select('id,status').eq('status','대기').order('created_at',{ascending:false}).limit(200);
     if(error) return;
     const list=data||[];
     const ids=new Set(list.map(r=>r.id));
-    if(!_matAlertInit){
-      // 최초 1회: 기존 대기건은 모두 '본 것'으로 처리 (알림 안 띄움)
-      _matAlertSeenIds=ids; _matAlertInit=true;
-      const b=El('mat-nav-badge'); if(b) b.style.display='none';
-      return;
-    }
-    // 안 본 신규 건수
-    let newCount=0; ids.forEach(id=>{ if(!_matAlertSeenIds.has(id)) newCount++; });
+    const totalPending=list.length;
+    // 배지: 미완료(대기) 전체 건수 — 완료해야만 감소
     const badge=El('mat-nav-badge');
     if(badge){
-      if(newCount>0){ badge.style.display='inline-block'; badge.textContent='신규 '+newCount+'건'; }
+      if(totalPending>0){ badge.style.display='inline-block'; badge.textContent='신규 '+totalPending+'건'; }
       else badge.style.display='none';
     }
-    if(newCount>0){ showSoAlertModal(newCount,'mat'); }
-    _matAlertSeenIds=ids;
+    // 중앙 모달: 최초 로드 후 새로 추가된 신규건이 있을 때만 (안 본 신규 기준)
+    if(!_matAlertInit){ _matAlertSeenIds=ids; _matAlertInit=true; }
+    else {
+      let newCount=0; ids.forEach(id=>{ if(!_matAlertSeenIds.has(id)) newCount++; });
+      if(newCount>0){ showSoAlertModal(newCount,'mat'); }
+      _matAlertSeenIds=ids;
+    }
   }catch(e){ console.warn('자재 알람 체크 오류:',e); }
 }
-// 자재 입고 처리 페이지를 열면 현재 대기건을 모두 본 것으로 처리 → 배지 사라짐
+// 자재 입고 처리 페이지를 열면 모달 중복방지용 seen 처리 (배지는 완료해야만 감소)
 function markMatSeen(){
   const ids=new Set((_matInData||[]).filter(r=>(r.status||'대기')==='대기').map(r=>r.id));
   _matAlertSeenIds=ids; _matAlertInit=true;
-  const badge=El('mat-nav-badge'); if(badge) badge.style.display='none';
 }
 
 </script>
