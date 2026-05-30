@@ -421,17 +421,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="sb-sec sec-sales">영업 관리</div>
   <div class="nav" id="nav-so-reg" onclick="go('so-reg')" data-p="so-reg"><i class="nav-ic">✎</i> 수주 등록</div>
   <div class="nav" id="nav-so-list" onclick="go('so-list')" data-p="so-list"><i class="nav-ic">≡</i> 수주 조회<span id="so-nav-badge" class="new-badge" style="display:none"></span></div>
-  <div class="nav" id="nav-so-proc" onclick="go('so-proc')" data-p="so-proc"><i class="nav-ic">✔</i> 수주 처리</div>
+  <div class="nav" id="nav-so-proc" onclick="go('so-proc')" data-p="so-proc" style="display:none"><i class="nav-ic">✔</i> 수주 처리</div>
   <div class="nav" onclick="go('stock')" data-p="stock"><i class="nav-ic">◉</i> 재고 조회</div>
-  <div class="nav" onclick="go('mat-in-ro')" data-p="mat-in-ro"><i class="nav-ic">👁</i> 자재 입고 처리</div>
+  <div class="nav" onclick="go('mat-in-ro')" data-p="mat-in-ro"><i class="nav-ic">👁</i> 자재 입고 현황</div>
   <div class="sb-sec sec-sales">구매/자재 관리</div>
   <div class="nav" id="nav-mat-plan" onclick="go('mat-plan')" data-p="mat-plan"><i class="nav-ic">📦</i> 입고 예정 자재</div>
   <div class="nav" id="nav-mat-in" onclick="go('mat-in')" data-p="mat-in"><i class="nav-ic">✔</i> 자재 입고 처리<span id="mat-nav-badge" class="new-badge" style="display:none"></span></div>
   <div class="nav" id="nav-in" onclick="go('in')" data-p="in"><i class="nav-ic">↓</i> 입고 등록</div>
   <div class="nav" id="nav-bulk" onclick="go('bulk')" data-p="bulk"><i class="nav-ic">↓↓</i> 대량 입고</div>
   <div class="sb-sec sec-inv">물류 관리</div>
+  <div class="nav" id="nav-so-list2" onclick="go('so-list')" data-p="so-list"><i class="nav-ic">≡</i> 수주 조회</div>
+  <div class="nav" id="nav-so-proc2" onclick="go('so-proc')" data-p="so-proc"><i class="nav-ic">✔</i> 수주 처리</div>
+  <div class="nav" onclick="go('mat-in-ro')" data-p="mat-in-ro"><i class="nav-ic">👁</i> 자재 입고 현황</div>
   <div class="nav" onclick="go('stock')" data-p="stock"><i class="nav-ic">◉</i> 재고 조회</div>
-  <div class="nav" onclick="go('mat-in-ro')" data-p="mat-in-ro"><i class="nav-ic">👁</i> 자재 입고 처리</div>
   <div class="nav" id="nav-tr" onclick="go('tr')" data-p="tr"><i class="nav-ic">⇄</i> 창고 이동</div>
   <div class="nav" id="nav-ret" onclick="go('ret')" data-p="ret"><i class="nav-ic">↩</i> 반품/회수</div>
   <div class="nav" id="nav-out" onclick="go('out')" data-p="out"><i class="nav-ic">↑</i> 출고 처리</div>
@@ -537,6 +539,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <div class="card"><div class="card-head"><span class="card-title">자재 입고 현황</span></div><div class="card-body" id="d-mat-status"></div></div>
         <div class="card"><div class="card-head"><span class="card-title">업체별 출고 TOP 10</span></div><div class="card-body" id="d-vendor-out" style="max-height:220px;overflow-y:auto"></div></div>
         <div class="card"><div class="card-head"><span class="card-title">재고 부족 품목 (10개 이하)</span></div><div class="card-body" id="d-low-stock" style="max-height:220px;overflow-y:auto"></div></div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="card"><div class="card-head"><span class="card-title">⏳ 장기 재고 (6개월 이상 경과)</span><span style="font-size:11px;color:var(--tx3);margin-left:8px">오래된 LOT 기준</span></div><div class="card-body" id="d-longterm" style="max-height:280px;overflow-y:auto"></div></div>
       </div>
     </section>
 
@@ -1072,13 +1077,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
           </div>
         </div>
         <!-- 우측 폼 영역 -->
-        <div style="flex:1;min-width:0">
+        <div style="flex:0 1 auto;min-width:0">
           <!-- 캡슐 입고 내역 -->
           <div class="mat-doc" id="matp-doc-capsule">
             <div class="mat-doc-head">
               <div class="mat-doc-title">캡 슐 입 고 내 역</div>
             </div>
-            <div class="mat-tw"><table class="mat-table" id="matp-table" style="table-layout:fixed;width:auto;min-width:0;margin:0 auto">
+            <div class="mat-tw"><table class="mat-table" id="matp-table" style="table-layout:fixed;width:auto;min-width:0">
               <colgroup>
                 <col style="width:72px"><col style="width:80px"><col style="width:120px"><col style="width:320px">
                 <col style="width:80px"><col style="width:55px"><col style="width:55px"><col style="width:50px">
@@ -1101,7 +1106,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
             <div class="mat-doc-head">
               <div class="mat-doc-title">공 캡 슐 입 고 내 역</div>
             </div>
-            <div class="mat-tw"><table class="mat-table" id="matpe-table" style="table-layout:fixed;width:auto;min-width:0;margin:0 auto">
+            <div class="mat-tw"><table class="mat-table" id="matpe-table" style="table-layout:fixed;width:auto;min-width:0">
               <colgroup>
                 <col style="width:72px"><col style="width:80px"><col style="width:120px"><col style="width:80px"><col style="width:280px">
                 <col style="width:80px"><col style="width:55px"><col style="width:55px"><col style="width:50px">
@@ -1870,18 +1875,31 @@ async function applyRole(role,name,permissions){
   ROLE=role; USERNAME=name;
   const rm={'관리자':'admin','담당자':'manager','일반':'user'};
   El('sb-user').innerHTML=`<span style="color:#c5d3e2">${name}</span> <span class="role-badge role-${rm[role]||'user'}">${role}</span>`;
-  if(role==='관리자'){ USER_PERMS=[...ALL_MENUS]; document.querySelectorAll('.nav').forEach(e=>e.classList.remove('disabled')); }
+  if(role==='관리자'){ USER_PERMS=[...ALL_MENUS]; document.querySelectorAll('.nav').forEach(e=>e.classList.remove('disabled')); syncDupNavs(); }
   else if(permissions){
     USER_PERMS=permissions.split(',').filter(Boolean);
     const NAV_MAP={in:'nav-in',bulk:'nav-bulk',out:'nav-out',tr:'nav-tr',ret:'nav-ret',adj:'nav-adj',cl:'nav-cl',master:'nav-master',users:'nav-users',ship:'nav-ship','so-reg':'nav-so-reg','so-list':'nav-so-list','so-proc':'nav-so-proc'};
     Object.entries(NAV_MAP).forEach(([key,navId])=>{ const el=El(navId); if(!el) return; if(!USER_PERMS.includes(key)) el.classList.add('disabled'); else el.classList.remove('disabled'); });
+    // 물류 관리의 복제 메뉴(수주조회/수주처리)를 원본 메뉴와 동일한 활성 상태로 동기화
+    syncDupNavs();
     El('nav-users')?.classList.add('disabled');
   } else {
     USER_PERMS=[...(ROLE_DEFAULT_PERMS[role]||['dash','stock','rep','hist'])];
     if(role==='일반') ['nav-in','nav-bulk','nav-out','nav-tr','nav-ret','nav-adj','nav-cl','nav-master','nav-users','nav-ship'].forEach(id=>El(id)?.classList.add('disabled'));
     if(role==='담당자') ['nav-in','nav-bulk','nav-adj','nav-cl','nav-master','nav-users'].forEach(id=>El(id)?.classList.add('disabled'));
+    syncDupNavs();
   }
   setDot('ok','연결됨'); await Promise.all([loadWarehouses(), loadMaster()]);
+}
+
+// 물류 관리의 복제 메뉴를 원본 메뉴의 disabled 상태와 동기화
+function syncDupNavs(){
+  const pairs=[['nav-so-list','nav-so-list2'],['nav-so-proc','nav-so-proc2']];
+  pairs.forEach(([src,dup])=>{
+    const s=El(src), d=El(dup); if(!s||!d) return;
+    if(s.classList.contains('disabled')) d.classList.add('disabled');
+    else d.classList.remove('disabled');
+  });
 }
 function doLogout(){
   stopSoAlert(); ROLE=''; USERNAME=''; SD=[]; El('app').style.display='none'; El('login-wrap').style.display='flex'; El('l-id').value=''; El('l-pw').value=''; El('l-err').textContent=''; }
@@ -1984,6 +2002,18 @@ async function loadDash2(){
     data.forEach(d=>{ const k=d.item||'(품명미입력)'; stockMap[k]=(stockMap[k]||0)+(Number(d.qty)||0); });
     const low=Object.entries(stockMap).filter(([k,q])=>q<=10).sort((a,b)=>a[1]-b[1]).slice(0,30);
     El('d-low-stock').innerHTML=low.length?low.map(([it,q])=>`<div class="ri"><span class="badge ${q<=0?'b-out':'b-adj'}">${q<=0?'품절':'부족'}</span><span class="ri-name" title="${matEsc(it)}">${matEsc(it)}</span><span class="ri-qty">${fmt(q)}</span></div>`).join(''):'<div style="color:var(--tx3);font-size:11px;padding:8px 0">부족 품목 없음</div>';
+    // [6번] 장기 재고 (오래된 LOT 기준 6개월 이상 경과)
+    const ymdToDate=s=>{ if(!s||s==='-') return null; const m=String(s).match(/(\d{2})[.\-](\d{1,2})[.\-](\d{1,2})/); if(!m) return null; return new Date(2000+Number(m[1]),Number(m[2])-1,Number(m[3])); };
+    const sixMonthsAgo=new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth()-6);
+    const longterm=data.map(d=>{ const dt=ymdToDate(d.lotDate&&d.lotDate!=='-'?d.lotDate:d.date); return {...d, _dt:dt}; })
+      .filter(d=>d._dt && d._dt<=sixMonthsAgo && (Number(d.qty)||0)>0)
+      .sort((a,b)=>a._dt-b._dt);
+    const daysAgo=dt=>Math.floor((Date.now()-dt.getTime())/86400000);
+    El('d-longterm').innerHTML=longterm.length?(
+      '<table class="mat-table" style="font-size:11px"><thead><tr><th style="width:90px">LOT일자</th><th style="width:70px">경과일</th><th style="width:110px">품번</th><th>품명</th><th style="width:90px">창고</th><th style="width:70px">재고</th></tr></thead><tbody>'
+      +longterm.map(d=>`<tr><td style="text-align:center">${d.lotDate&&d.lotDate!=='-'?d.lotDate:d.date}</td><td style="text-align:center;color:var(--rd);font-weight:600">${daysAgo(d._dt)}일</td><td style="text-align:center">${matEsc(d.pNo)||'-'}</td><td style="text-align:left">${matEsc(d.item)}</td><td style="text-align:center">${whBadge(d.wh)}</td><td style="text-align:center;font-weight:600">${fmt(d.qty)}</td></tr>`).join('')
+      +'</tbody></table>'
+    ):'<div style="color:var(--tx3);font-size:11px;padding:8px 0">6개월 이상 경과한 장기 재고 없음</div>';
     setDot('ok','연결됨');
   }catch(e){ toast('대시보드2 오류: '+e.message,'er'); setDot('err','연결 오류'); }finally{ hideOv(); }
 }
@@ -3493,7 +3523,7 @@ function renderMatIn(){
     const st=r.status||'대기';
     const isAdmin=ROLE==='관리자';
     const locked = st==='완료' && !isAdmin; // 완료 + 비관리자 => 잠금
-    const editBtn = locked ? '' : `<button class="btn btn-def btn-sm" onclick="editMatIn('${r.id}')">수정</button>`;
+    const editBtn = locked ? '' : `<button class="btn btn-yw btn-sm" onclick="editMatIn('${r.id}')">수정</button>`;
     const statusBtn = st!=='완료'
       ? `<button class="btn btn-gn btn-sm" onclick="completeMatIn('${r.id}')">완료</button>`
       : (isAdmin ? `<button class="btn btn-def btn-sm" onclick="reopenMatIn('${r.id}')">대기</button>` : '');
@@ -3502,7 +3532,7 @@ function renderMatIn(){
       <button class="btn btn-pri btn-sm" onclick="viewMatIn('${r.id}')">보기</button>
       ${editBtn}
       ${statusBtn}
-      <button class="btn btn-def btn-sm" onclick="printMatRow('${r.id}')">출력</button>
+      <button class="btn btn-gn btn-sm" onclick="printMatRow('${r.id}')">출력</button>
       ${delBtn}
     `;
     const isoToYmd=iso=>iso?String(iso).slice(2,10).replace(/-/g,'.'):'-'; // 2026-06-02 → 26.06.02
@@ -3553,7 +3583,7 @@ function renderMatInRO(){
     const btns=`
       <button class="btn btn-pri btn-sm" onclick="viewMatIn('${r.id}')">보기</button>
       ${xMark}
-      <button class="btn btn-def btn-sm" onclick="printMatRow('${r.id}')">출력</button>
+      <button class="btn btn-gn btn-sm" onclick="printMatRow('${r.id}')">출력</button>
     `;
     return `<tr>
       <td class="td-date">${dateCell}</td>
