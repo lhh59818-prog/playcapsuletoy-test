@@ -163,7 +163,7 @@ tbody tr:last-child td{border-bottom:none}
 .ti{color:var(--gn);text-align:right;font-weight:600}
 .to{color:var(--rd);text-align:right;font-weight:600}
 .tt{color:var(--ac);text-align:right;font-weight:700;background:var(--ac-bg)}
-.wh{display:inline-block;background:var(--bg4);border:1px solid var(--bd);border-radius:2px;padding:1px 5px;font-size:10px;color:var(--tx2);font-weight:500;white-space:nowrap;line-height:1.4}
+.wh{display:inline-block;background:linear-gradient(135deg,#94a3b8,#cbd5e1);border:none;border-radius:20px;padding:3px 11px;font-size:12px;color:#fff;font-weight:500;white-space:nowrap;line-height:1.4}
 .split{display:grid;grid-template-columns:1fr 320px;gap:12px;align-items:start}
 @media(max-width:860px){.split{grid-template-columns:1fr}}
 .split-l{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
@@ -269,7 +269,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   .mat-table{font-size:8.5pt!important;page-break-inside:auto}
   .mat-table thead th{background:#dbe4f3!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .mat-table tbody td input{border:none!important;background:transparent!important;-webkit-print-color-adjust:exact}
-  .mat-table td.col-item input,.mat-table td.col-item{white-space:normal!important;word-break:break-all;text-align:left}
+  .mat-table td.col-item input,.mat-table td.col-item{white-space:normal!important;word-break:break-all;text-align:center}
   .mat-tw{max-height:none!important;overflow:visible!important}
   /* 출력(모달 인쇄) 모드: 모달 내용만 보이게 */
   body.mat-print #pages,body.mat-print #app{display:none!important}
@@ -376,9 +376,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .mat-table tbody td input:focus{outline:2px solid var(--ac);outline-offset:-2px;background:#fff}
 .mat-table tbody tr:nth-child(even){background:#fafbfc}
 .mat-table tbody td,.mat-table tfoot td{font-size:11px}
-.mat-table td.col-item input{text-align:left}
-.mat-table td.col-item{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mat-table td.col-num input{text-align:right}
+.mat-table td.col-item input{text-align:center}
+.mat-table td.col-item{text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mat-table td.col-num input{text-align:center}
 .mat-table tfoot td{padding:5px 6px;background:var(--bg4);border:1px solid #d0d7e3}
 .mat-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700}
 .mat-badge.wait{background:var(--yw-bg);color:var(--yw)}
@@ -422,13 +422,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="nav" id="nav-so-reg" onclick="go('so-reg')" data-p="so-reg"><i class="nav-ic">✎</i> 수주 등록</div>
   <div class="nav" id="nav-so-list" onclick="go('so-list')" data-p="so-list"><i class="nav-ic">≡</i> 수주 조회<span id="so-nav-badge" class="new-badge" style="display:none"></span></div>
   <div class="nav" id="nav-so-proc" onclick="go('so-proc')" data-p="so-proc"><i class="nav-ic">✔</i> 수주 처리</div>
-  <div class="sb-sec sec-sales">자재 관리</div>
+  <div class="sb-sec sec-sales">구매/자재 관리</div>
   <div class="nav" id="nav-mat-plan" onclick="go('mat-plan')" data-p="mat-plan"><i class="nav-ic">📦</i> 입고 예정 자재</div>
   <div class="nav" id="nav-mat-in" onclick="go('mat-in')" data-p="mat-in"><i class="nav-ic">✔</i> 자재 입고 처리<span id="mat-nav-badge" class="new-badge" style="display:none"></span></div>
-  <div class="sb-sec sec-inv">재고 관리</div>
-  <div class="nav" onclick="go('stock')" data-p="stock"><i class="nav-ic">◉</i> 재고 조회</div>
   <div class="nav" id="nav-in" onclick="go('in')" data-p="in"><i class="nav-ic">↓</i> 입고 등록</div>
   <div class="nav" id="nav-bulk" onclick="go('bulk')" data-p="bulk"><i class="nav-ic">↓↓</i> 대량 입고</div>
+  <div class="sb-sec sec-inv">재고 관리</div>
+  <div class="nav" onclick="go('stock')" data-p="stock"><i class="nav-ic">◉</i> 재고 조회</div>
   <div class="nav" id="nav-tr" onclick="go('tr')" data-p="tr"><i class="nav-ic">⇄</i> 창고 이동</div>
   <div class="nav" id="nav-ret" onclick="go('ret')" data-p="ret"><i class="nav-ic">↩</i> 반품/회수</div>
   <div class="sb-sec sec-out">출하 관리</div>
@@ -1053,7 +1053,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div style="display:flex;gap:14px;align-items:flex-start">
         <!-- 좌측 세로 탭 -->
         <div class="so-sidetabs no-print" style="display:flex;flex-direction:column;gap:6px;min-width:150px;flex-shrink:0">
-          <div class="so-sidetab active">📋 캡슐 입고 내역</div>
+          <div class="so-sidetab active" id="matp-tab-capsule" onclick="switchMatPlanTab('캡슐')">📋 캡슐 입고 내역</div>
+          <div class="so-sidetab" id="matp-tab-empty" onclick="switchMatPlanTab('공캡슐')">⚪ 공 캡슐 입고 내역</div>
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
             <button class="btn btn-pri no-print" style="width:100%" onclick="saveMatPlan()">저장</button>
             <button class="btn btn-def no-print" style="width:100%" onclick="clearMatPlan()">초기화</button>
@@ -1065,18 +1066,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
         </div>
         <!-- 우측 폼 영역 -->
         <div style="flex:1;min-width:0">
-          <div class="mat-doc">
+          <!-- 캡슐 입고 내역 -->
+          <div class="mat-doc" id="matp-doc-capsule">
             <div class="mat-doc-head">
               <div class="mat-doc-title">캡 슐 입 고 내 역</div>
             </div>
             <div class="mat-tw"><table class="mat-table" id="matp-table" style="table-layout:fixed;width:auto;min-width:0">
               <colgroup>
                 <col style="width:72px"><col style="width:80px"><col style="width:120px"><col style="width:320px">
-                <col style="width:80px"><col style="width:55px"><col style="width:55px"><col style="width:50px"><col style="width:70px">
+                <col style="width:80px"><col style="width:55px"><col style="width:55px"><col style="width:50px">
               </colgroup>
               <thead><tr>
                 <th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th>
-                <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th><th>실제입고</th>
+                <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th>
               </tr></thead>
               <tbody id="matp-tb"></tbody>
               <tfoot><tr class="mat-foot">
@@ -1084,7 +1086,29 @@ button:disabled{opacity:.45;cursor:not-allowed}
                 <td id="matp-sum-qty" style="font-weight:700;text-align:center">0</td>
                 <td></td>
                 <td id="matp-sum-carton" style="font-weight:700;text-align:center">0</td>
+              </tr></tfoot>
+            </table></div>
+          </div>
+          <!-- 공 캡슐 입고 내역 -->
+          <div class="mat-doc" id="matp-doc-empty" style="display:none">
+            <div class="mat-doc-head">
+              <div class="mat-doc-title">공 캡 슐 입 고 내 역</div>
+            </div>
+            <div class="mat-tw"><table class="mat-table" id="matpe-table" style="table-layout:fixed;width:auto;min-width:0">
+              <colgroup>
+                <col style="width:72px"><col style="width:80px"><col style="width:120px"><col style="width:80px"><col style="width:280px">
+                <col style="width:80px"><col style="width:55px"><col style="width:55px"><col style="width:50px">
+              </colgroup>
+              <thead><tr>
+                <th>입고예정일</th><th>업체</th><th>품번</th><th>규격</th><th>품명</th>
+                <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th>
+              </tr></thead>
+              <tbody id="matpe-tb"></tbody>
+              <tfoot><tr class="mat-foot">
+                <td colspan="6" style="text-align:center;font-weight:700">합계</td>
+                <td id="matpe-sum-qty" style="font-weight:700;text-align:center">0</td>
                 <td></td>
+                <td id="matpe-sum-carton" style="font-weight:700;text-align:center">0</td>
               </tr></tfoot>
             </table></div>
           </div>
@@ -1118,7 +1142,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
     <!-- 자재 입고 보기/수정 모달 -->
     <div id="mati-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:600;align-items:center;justify-content:center">
-      <div id="mati-modal-box" style="background:#fff;border-radius:8px;padding:20px;width:96%;max-width:1100px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)">
+      <div id="mati-modal-box" style="background:#fff;border-radius:8px;padding:20px;width:96%;max-width:1320px;max-height:95vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div id="mati-modal-title" style="font-size:15px;font-weight:700;color:var(--tx)">자재 입고 내역</div>
           <div class="no-print" style="display:flex;gap:6px">
@@ -1129,23 +1153,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
         </div>
         <input type="hidden" id="me-id">
         <div class="mat-doc" id="mati-modal-doc">
-          <div class="mat-doc-head"><div class="mat-doc-title">캡 슐 입 고 내 역</div></div>
+          <div class="mat-doc-head"><div class="mat-doc-title" id="mati-view-doctitle">캡 슐 입 고 내 역</div></div>
           <div class="mat-tw" style="max-height:70vh"><table class="mat-table" id="mati-view-table" style="table-layout:fixed">
-            <colgroup>
+            <colgroup id="mati-view-colgroup">
               <col style="width:62px"><col style="width:62px"><col style="width:108px"><col>
-              <col style="width:52px"><col style="width:40px"><col style="width:48px"><col style="width:42px"><col style="width:62px">
+              <col style="width:52px"><col style="width:40px"><col style="width:48px"><col style="width:42px">
             </colgroup>
-            <thead><tr>
+            <thead id="mati-view-thead"><tr>
               <th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th>
-              <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th><th>실제입고</th>
+              <th>판매가</th><th>수량</th><th>박스</th><th>카톤</th>
             </tr></thead>
             <tbody id="mati-view-tb"></tbody>
-            <tfoot><tr class="mat-foot">
+            <tfoot id="mati-view-tfoot"><tr class="mat-foot">
               <td colspan="5" style="text-align:center;font-weight:700">합계</td>
               <td id="mati-view-sum-qty" style="font-weight:700;text-align:center">0</td>
               <td></td>
               <td id="mati-view-sum-carton" style="font-weight:700;text-align:center">0</td>
-              <td></td>
             </tr></tfoot>
           </table></div>
         </div>
@@ -1765,7 +1788,7 @@ function fillAllWhFilters(){
 let WH_COLORS={};
 async function loadWarehouses(){ const { data }=await db.from('warehouses').select('name,color').order('sort_order'); WHS=(data||[]).map(r=>r.name); WH_COLORS={}; (data||[]).forEach(r=>{ if(r.color) WH_COLORS[r.name]=r.color; }); fillAllWhFilters(); }
 function getWhColor(name){ return WH_COLORS[name]||''; }
-function whBadge(name){ const c=getWhColor(name); if(c){ return `<span class="wh" style="background:${c}20;border-color:${c};color:${c}">${name}</span>`; } return `<span class="wh">${name}</span>`; }
+function whBadge(name){ const c=getWhColor(name); if(c){ return `<span class="wh" style="background:linear-gradient(135deg,${c},${c}aa);color:#fff">${name}</span>`; } return `<span class="wh">${name}</span>`; }
 
 // ★ 대량입고 창고 셀렉트 옵션 문자열 생성 (매번 호출)
 function bulkWhOptsHtml(){ return WHS.map(w=>`<option value="${w}">${w}</option>`).join(''); }
@@ -1871,7 +1894,7 @@ function go(p){
   if(p==='so-reg') initSoForm();
   if(p==='so-list') loadSoList();
   if(p==='so-proc') loadSoProc();
-  if(p==='mat-plan') initMatPlan();
+  if(p==='mat-plan'){ initMatPlan(); switchMatPlanTab('캡슐'); }
   if(p==='mat-in') loadMatIn();
 }
 function toggleSb(){ El('sb').classList.toggle('collapsed'); }
@@ -3147,6 +3170,7 @@ async function updateSoStatus(id,status){
 const MATP_ROWS = 50; // 기본 행 수
 let _matInData = [];
 let _matViewMode = 'view'; // 'view' | 'edit'
+let _matViewKind = '캡슐'; // 현재 모달에 열린 종류
 
 // 입고 예정일 정규화: "0602", "260602", "5월27일", "6월2일", "26.06.02" → "26.06.02"
 function normMatDate(raw){
@@ -3176,6 +3200,19 @@ function matComma(inp){
 }
 
 // ---------- 입고 예정 자재 (입력 폼) ----------
+let _matpKind='캡슐';  // 현재 활성 탭: 캡슐 / 공캡슐
+
+// 탭별 설정: 테이블/합계 id, 행 생성 함수, paste 숫자 컬럼 범위
+function matpCfg(kind){
+  if(kind==='공캡슐'){
+    return { tbId:'matpe-tb', sumQty:'matpe-sum-qty', sumCarton:'matpe-sum-carton',
+             rowFn:matpeRowHtml, numFrom:5, numTo:8, priceCol:5, dateCol:0 };
+  }
+  return { tbId:'matp-tb', sumQty:'matp-sum-qty', sumCarton:'matp-sum-carton',
+           rowFn:matpRowHtml, numFrom:4, numTo:7, priceCol:4, dateCol:0 };
+}
+
+// 캡슐 행 (8칸)
 function matpRowHtml(i){
   return `<tr data-r="${i}">
     <td><input class="mp-pdate" data-c="0"></td>
@@ -3183,44 +3220,73 @@ function matpRowHtml(i){
     <td><input class="mp-pno" data-c="2"></td>
     <td class="col-item"><input class="mp-item" data-c="3"></td>
     <td class="col-num"><input class="mp-price" data-c="4" oninput="matComma(this)"></td>
-    <td class="col-num"><input class="mp-qty" data-c="5" oninput="updateMatpSum()"></td>
+    <td class="col-num"><input class="mp-qty" data-c="5" oninput="updateMatpSum('캡슐')"></td>
     <td class="col-num"><input class="mp-box" data-c="6"></td>
-    <td class="col-num"><input class="mp-carton" data-c="7" oninput="updateMatpSum()"></td>
-    <td class="col-num"><input class="mp-actual" data-c="8"></td>
+    <td class="col-num"><input class="mp-carton" data-c="7" oninput="updateMatpSum('캡슐')"></td>
   </tr>`;
 }
 
+// 공캡슐 행 (9칸: 품번 뒤 규격 추가)
+function matpeRowHtml(i){
+  return `<tr data-r="${i}">
+    <td><input class="mpe-pdate" data-c="0"></td>
+    <td><input class="mpe-vendor" data-c="1"></td>
+    <td><input class="mpe-pno" data-c="2"></td>
+    <td><input class="mpe-spec" data-c="3"></td>
+    <td class="col-item"><input class="mpe-item" data-c="4"></td>
+    <td class="col-num"><input class="mpe-price" data-c="5" oninput="matComma(this)"></td>
+    <td class="col-num"><input class="mpe-qty" data-c="6" oninput="updateMatpSum('공캡슐')"></td>
+    <td class="col-num"><input class="mpe-box" data-c="7"></td>
+    <td class="col-num"><input class="mpe-carton" data-c="8" oninput="updateMatpSum('공캡슐')"></td>
+  </tr>`;
+}
+
+function switchMatPlanTab(kind){
+  _matpKind=kind;
+  El('matp-tab-capsule').classList.toggle('active', kind==='캡슐');
+  El('matp-tab-empty').classList.toggle('active', kind==='공캡슐');
+  El('matp-doc-capsule').style.display = kind==='캡슐' ? 'block' : 'none';
+  El('matp-doc-empty').style.display   = kind==='공캡슐' ? 'block' : 'none';
+}
+
 function initMatPlan(){
-  const tb = El('matp-tb');
-  if(!tb) return;
-  if(tb.children.length===0){
+  ['캡슐','공캡슐'].forEach(kind=>{
+    const cfg=matpCfg(kind);
+    const tb=El(cfg.tbId);
+    if(!tb || tb.children.length>0) return;
     let html='';
-    for(let i=0;i<MATP_ROWS;i++) html+=matpRowHtml(i);
+    for(let i=0;i<MATP_ROWS;i++) html+=cfg.rowFn(i);
     tb.innerHTML=html;
-    attachMatpPaste();
+    attachMatpPaste(kind);
     tb.addEventListener('blur', e=>{
-      if(e.target.classList && e.target.classList.contains('mp-pdate')){
+      if(e.target.classList && (e.target.classList.contains('mp-pdate')||e.target.classList.contains('mpe-pdate'))){
         const v=e.target.value.trim();
         if(v) e.target.value=normMatDate(v);
       }
     }, true);
-    updateMatpSum();
-  }
+    updateMatpSum(kind);
+  });
 }
 
-function updateMatpSum(){
-  const tb=El('matp-tb'); if(!tb) return;
+function updateMatpSum(kind){
+  kind=kind||_matpKind;
+  const cfg=matpCfg(kind);
+  const tb=El(cfg.tbId); if(!tb) return;
+  const qSel=kind==='공캡슐'?'.mpe-qty':'.mp-qty';
+  const cSel=kind==='공캡슐'?'.mpe-carton':'.mp-carton';
   let q=0,c=0;
   tb.querySelectorAll('tr').forEach(tr=>{
-    q+=Number((tr.querySelector('.mp-qty')?.value||'').replace(/,/g,''))||0;
-    c+=Number((tr.querySelector('.mp-carton')?.value||'').replace(/,/g,''))||0;
+    const qty=Number((tr.querySelector(qSel)?.value||'').replace(/,/g,''))||0;
+    const carton=Number((tr.querySelector(cSel)?.value||'').replace(/,/g,''))||0;
+    q+=qty*carton; c+=carton;
   });
-  if(El('matp-sum-qty')) El('matp-sum-qty').textContent=fmt(q);
-  if(El('matp-sum-carton')) El('matp-sum-carton').textContent=fmt(c);
+  if(El(cfg.sumQty)) El(cfg.sumQty).textContent=fmt(q);
+  if(El(cfg.sumCarton)) El(cfg.sumCarton).textContent=fmt(c);
 }
 
-function attachMatpPaste(){
-  const tb=El('matp-tb');
+function attachMatpPaste(kind){
+  const cfg=matpCfg(kind);
+  const tb=El(cfg.tbId);
   tb.addEventListener('paste', e=>{
     const target=e.target;
     if(!target.dataset || target.dataset.c===undefined) return;
@@ -3230,7 +3296,7 @@ function attachMatpPaste(){
     const startRow=parseInt(target.closest('tr').dataset.r,10);
     const startCol=parseInt(target.dataset.c,10);
     const rows=text.replace(/\r/g,'').split('\n').filter((l,idx,arr)=> l!=='' || idx<arr.length-1);
-    ensureMatpRows(startRow+rows.length);
+    ensureMatpRows(kind, startRow+rows.length);
     rows.forEach((line,ri)=>{
       if(line==='') return;
       const cells=line.split('\t');
@@ -3241,14 +3307,12 @@ function attachMatpPaste(){
         const inp=tr.querySelector(`input[data-c="${c}"]`);
         if(!inp) return;
         let v=val.trim();
-        if(c===0){ v=normMatDate(v); }
-        else if(c>=4 && c<=8){
-          // 콤마/공백/원화 제거 후 숫자화
+        if(c===cfg.dateCol){ v=normMatDate(v); }
+        else if(c>=cfg.numFrom && c<=cfg.numTo){
           let num=v.replace(/[,\s₩]/g,'');
-          // 소수점 끝 0 제거 (5.0 → 5, 40.0 → 40, 5.50 → 5.5)
           if(/^\d*\.\d+$/.test(num)){ num=String(parseFloat(num)); }
           v=num;
-          if(c===4 && v!==''){ // 판매가: 콤마 적용
+          if(c===cfg.priceCol && v!==''){
             const n=Number(v.replace(/,/g,''));
             v = isNaN(n) ? v : n.toLocaleString();
           }
@@ -3256,53 +3320,63 @@ function attachMatpPaste(){
         inp.value=v;
       });
     });
-    updateMatpSum();
+    updateMatpSum(kind);
     toast(rows.filter(r=>r!=='').length+'개 행이 입력되었습니다','ok');
   });
 }
 
-function ensureMatpRows(n){
-  const tb=El('matp-tb');
+function ensureMatpRows(kind,n){
+  const cfg=matpCfg(kind);
+  const tb=El(cfg.tbId);
   let cur=tb.children.length;
   let html='';
-  for(let i=cur;i<n;i++) html+=matpRowHtml(i);
+  for(let i=cur;i<n;i++) html+=cfg.rowFn(i);
   if(html) tb.insertAdjacentHTML('beforeend',html);
 }
 
 function clearMatPlan(){
-  El('matp-tb').innerHTML='';
-  initMatPlan();
+  const cfg=matpCfg(_matpKind);
+  El(cfg.tbId).innerHTML='';
+  let html='';
+  for(let i=0;i<MATP_ROWS;i++) html+=cfg.rowFn(i);
+  El(cfg.tbId).innerHTML=html;
+  updateMatpSum(_matpKind);
   toast('초기화되었습니다','inf');
 }
 
-function collectMatpRows(){
-  const tb=El('matp-tb');
+function collectMatpRows(kind){
+  const cfg=matpCfg(kind);
+  const tb=El(cfg.tbId);
   const out=[];
+  const pre=kind==='공캡슐'?'mpe-':'mp-';
   tb.querySelectorAll('tr').forEach(tr=>{
     const g=cls=>tr.querySelector('.'+cls)?.value.trim()||'';
-    const pdate=normMatDate(g('mp-pdate'));
-    const vendor=g('mp-vendor'), pno=g('mp-pno'), item=g('mp-item');
+    const pdate=normMatDate(g(pre+'pdate'));
+    const vendor=g(pre+'vendor'), pno=g(pre+'pno'), item=g(pre+'item');
     if(!pno && !item) return;
-    out.push({
+    const row={
       plan_date:pdate, vendor, p_no:pno, item,
-      price:Number(g('mp-price').replace(/,/g,''))||0,
-      qty:Number(g('mp-qty').replace(/,/g,''))||0,
-      box_qty:Number(g('mp-box').replace(/,/g,''))||0,
-      carton:Number(g('mp-carton').replace(/,/g,''))||0,
-      actual_qty:Number(g('mp-actual').replace(/,/g,''))||0
-    });
+      price:Number(g(pre+'price').replace(/,/g,''))||0,
+      qty:Number(g(pre+'qty').replace(/,/g,''))||0,
+      box_qty:Number(g(pre+'box').replace(/,/g,''))||0,
+      carton:Number(g(pre+'carton').replace(/,/g,''))||0
+    };
+    if(kind==='공캡슐') row.spec=g(pre+'spec');
+    out.push(row);
   });
   return out;
 }
 
 async function saveMatPlan(){
-  const items=collectMatpRows();
+  const kind=_matpKind;
+  const items=collectMatpRows(kind);
   if(items.length===0){ toast('입력된 자재가 없습니다','er'); return; }
-  const total_qty=items.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const total_qty=items.reduce((s,r)=>s+((Number(r.qty)||0)*(Number(r.carton)||0)),0);
   const total_carton=items.reduce((s,r)=>s+(Number(r.carton)||0),0);
+  const title=kind==='공캡슐'?'공 캡슐 입고 내역':'캡슐 입고 내역';
   try{ showOv('저장 중...');
     const{error}=await db.from('material_orders').insert({
-      title:'캡슐 입고 내역', items, total_qty, total_carton,
+      kind, title, items, total_qty, total_carton,
       item_count:items.length, status:'대기', reg_user:(USERNAME||'')
     });
     if(error) throw new Error(error.message);
@@ -3368,37 +3442,58 @@ function renderMatIn(){
   }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--tx3);padding:32px">데이터 없음</td></tr>';
 }
 
-// 보기/수정 공통: 모달에 items 렌더
-function fillMatViewTable(items, editable){
+// 보기/수정 공통: 모달에 items 렌더 (kind: 캡슐/공캡슐)
+function fillMatViewTable(items, editable, kind){
+  const isEmpty=(kind==='공캡슐');
+  // 제목
+  El('mati-view-doctitle').textContent = isEmpty ? '공 캡 슐 입 고 내 역' : '캡 슐 입 고 내 역';
+  // colgroup
+  El('mati-view-colgroup').innerHTML = isEmpty
+    ? `<col style="width:60px"><col style="width:58px"><col style="width:100px"><col style="width:70px"><col><col style="width:52px"><col style="width:40px"><col style="width:46px"><col style="width:42px">`
+    : `<col style="width:62px"><col style="width:62px"><col style="width:108px"><col><col style="width:52px"><col style="width:40px"><col style="width:48px"><col style="width:42px">`;
+  // thead
+  El('mati-view-thead').innerHTML = isEmpty
+    ? `<tr><th>입고예정일</th><th>업체</th><th>품번</th><th>규격</th><th>품명</th><th>판매가</th><th>수량</th><th>박스</th><th>카톤</th></tr>`
+    : `<tr><th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th><th>판매가</th><th>수량</th><th>박스</th><th>카톤</th></tr>`;
+  // tfoot (합계 colspan: 공캡슐 6 / 캡슐 5)
+  const footSpan=isEmpty?6:5;
+  El('mati-view-tfoot').innerHTML =
+    `<tr class="mat-foot"><td colspan="${footSpan}" style="text-align:center;font-weight:700">합계</td>`
+    +`<td id="mati-view-sum-qty" style="font-weight:700;text-align:center">0</td><td></td>`
+    +`<td id="mati-view-sum-carton" style="font-weight:700;text-align:center">0</td></tr>`;
+  // body
   let q=0,c=0;
   const tb=El('mati-view-tb');
+  const emptyColspan=isEmpty?9:8;
   tb.innerHTML = (items||[]).map((it,i)=>{
-    q+=Number(it.qty)||0; c+=Number(it.carton)||0;
+    q+=(Number(it.qty)||0)*(Number(it.carton)||0); c+=Number(it.carton)||0;
     if(editable){
+      const specCell=isEmpty?`<td><input class="mv-spec" value="${matEsc(it.spec)}"></td>`:'';
       return `<tr data-vr="${i}">
         <td><input class="mv-pdate" value="${matEsc(it.plan_date)}"></td>
         <td><input class="mv-vendor" value="${matEsc(it.vendor)}"></td>
         <td><input class="mv-pno" value="${matEsc(it.p_no)}"></td>
+        ${specCell}
         <td class="col-item"><input class="mv-item" value="${matEsc(it.item)}"></td>
         <td class="col-num"><input class="mv-price" value="${matEsc(it.price)}"></td>
         <td class="col-num"><input class="mv-qty" value="${matEsc(it.qty)}" oninput="updateMatViewSum()"></td>
         <td class="col-num"><input class="mv-box" value="${matEsc(it.box_qty)}"></td>
         <td class="col-num"><input class="mv-carton" value="${matEsc(it.carton)}" oninput="updateMatViewSum()"></td>
-        <td class="col-num"><input class="mv-actual" value="${matEsc(it.actual_qty)}"></td>
       </tr>`;
     }
+    const specCell=isEmpty?`<td>${matEsc(it.spec)}</td>`:'';
     return `<tr>
       <td>${matEsc(it.plan_date)}</td>
       <td>${matEsc(it.vendor)}</td>
       <td>${matEsc(it.p_no)}</td>
-      <td class="col-item" style="text-align:left">${matEsc(it.item)}</td>
+      ${specCell}
+      <td class="col-item" style="text-align:center">${matEsc(it.item)}</td>
       <td class="col-num">₩${fmt(it.price)}</td>
       <td class="col-num">${fmt(it.qty)}</td>
       <td class="col-num">${fmt(it.box_qty)}</td>
       <td class="col-num">${fmt(it.carton)}</td>
-      <td class="col-num">${fmt(it.actual_qty)}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--tx3);padding:24px">품목 없음</td></tr>';
+  }).join('') || `<tr><td colspan="${emptyColspan}" style="text-align:center;color:var(--tx3);padding:24px">품목 없음</td></tr>`;
   El('mati-view-sum-qty').textContent=fmt(q);
   El('mati-view-sum-carton').textContent=fmt(c);
 }
@@ -3406,8 +3501,9 @@ function fillMatViewTable(items, editable){
 function updateMatViewSum(){
   const tb=El('mati-view-tb'); let q=0,c=0;
   tb.querySelectorAll('tr').forEach(tr=>{
-    q+=Number((tr.querySelector('.mv-qty')?.value||'').replace(/,/g,''))||0;
-    c+=Number((tr.querySelector('.mv-carton')?.value||'').replace(/,/g,''))||0;
+    const qty=Number((tr.querySelector('.mv-qty')?.value||'').replace(/,/g,''))||0;
+    const carton=Number((tr.querySelector('.mv-carton')?.value||'').replace(/,/g,''))||0;
+    q+=qty*carton; c+=carton;
   });
   El('mati-view-sum-qty').textContent=fmt(q);
   El('mati-view-sum-carton').textContent=fmt(c);
@@ -3415,21 +3511,21 @@ function updateMatViewSum(){
 
 function viewMatIn(id){
   const r=_matInData.find(x=>x.id===id); if(!r) return;
-  _matViewMode='view';
+  _matViewMode='view'; _matViewKind=r.kind||'캡슐';
   El('me-id').value=r.id;
   El('mati-modal-title').textContent='자재 입고 내역 (보기)  ·  '+fmtDate(r.created_at)+'  ·  '+(r.status||'대기');
   El('mati-modal-save').style.display='none';
-  fillMatViewTable(r.items, false);
+  fillMatViewTable(r.items, false, _matViewKind);
   El('mati-modal').style.display='flex';
 }
 
 function editMatIn(id){
   const r=_matInData.find(x=>x.id===id); if(!r) return;
-  _matViewMode='edit';
+  _matViewMode='edit'; _matViewKind=r.kind||'캡슐';
   El('me-id').value=r.id;
   El('mati-modal-title').textContent='자재 입고 내역 (수정)';
   El('mati-modal-save').style.display='';
-  fillMatViewTable(r.items, true);
+  fillMatViewTable(r.items, true, _matViewKind);
   El('mati-modal').style.display='flex';
 }
 
@@ -3437,19 +3533,21 @@ function closeMatEdit(){ El('mati-modal').style.display='none'; }
 
 async function saveMatEdit(){
   const id=El('me-id').value;
+  const isEmpty=(_matViewKind==='공캡슐');
   const num=v=>Number(String(v||'').replace(/,/g,''))||0;
   const items=[];
   El('mati-view-tb').querySelectorAll('tr[data-vr]').forEach(tr=>{
     const g=cls=>tr.querySelector('.'+cls)?.value.trim()||'';
-    items.push({
+    const row={
       plan_date:normMatDate(g('mv-pdate')), vendor:g('mv-vendor'),
       p_no:g('mv-pno'), item:g('mv-item'),
       price:num(g('mv-price')), qty:num(g('mv-qty')),
-      box_qty:num(g('mv-box')), carton:num(g('mv-carton')),
-      actual_qty:num(g('mv-actual'))
-    });
+      box_qty:num(g('mv-box')), carton:num(g('mv-carton'))
+    };
+    if(isEmpty) row.spec=g('mv-spec');
+    items.push(row);
   });
-  const total_qty=items.reduce((s,r)=>s+r.qty,0);
+  const total_qty=items.reduce((s,r)=>s+(r.qty*r.carton),0);
   const total_carton=items.reduce((s,r)=>s+r.carton,0);
   try{ showOv('저장 중...');
     const{error}=await db.from('material_orders').update({
@@ -3492,9 +3590,10 @@ function printMatRow(id){
 }
 // 입고 예정 자재 화면: 현재 입력 중인 폼을 인쇄
 function printMatPlan(){
-  const items=collectMatpRows();
+  const kind=_matpKind;
+  const items=collectMatpRows(kind);
   if(items.length===0){ toast('인쇄할 자재가 없습니다','er'); return; }
-  printMatData({items, reg_user:(USERNAME||''), confirm_user:'', created_at:new Date().toISOString(), status:'작성중'});
+  printMatData({kind, items, reg_user:(USERNAME||''), confirm_user:'', created_at:new Date().toISOString(), status:'작성중'});
 }
 // 보기 모달의 출력 버튼: 현재 열린 건 인쇄
 function printMatModal(){
@@ -3505,17 +3604,34 @@ function printMatModal(){
 }
 function printMatData(r){
   const items=r.items||[];
+  const isEmpty=(r.kind==='공캡슐');
   let q=0,c=0;
   const bodyRows=items.map(it=>{
-    q+=Number(it.qty)||0; c+=Number(it.carton)||0;
+    q+=(Number(it.qty)||0)*(Number(it.carton)||0); c+=Number(it.carton)||0;
+    if(isEmpty){
+      return `<tr>
+        <td>${matEsc(it.plan_date)}</td><td>${matEsc(it.vendor)}</td><td>${matEsc(it.p_no)}</td><td>${matEsc(it.spec)}</td>
+        <td class="l">${matEsc(it.item)}</td><td class="r">₩${fmt(it.price)}</td><td class="r">${fmt(it.qty)}</td>
+        <td class="r">${fmt(it.box_qty)}</td><td class="r">${fmt(it.carton)}</td>
+      </tr>`;
+    }
     return `<tr>
       <td>${matEsc(it.plan_date)}</td><td>${matEsc(it.vendor)}</td><td>${matEsc(it.p_no)}</td>
       <td class="l">${matEsc(it.item)}</td><td class="r">₩${fmt(it.price)}</td><td class="r">${fmt(it.qty)}</td>
-      <td class="r">${fmt(it.box_qty)}</td><td class="r">${fmt(it.carton)}</td><td class="r">${fmt(it.actual_qty)}</td>
+      <td class="r">${fmt(it.box_qty)}</td><td class="r">${fmt(it.carton)}</td>
     </tr>`;
   }).join('');
+  const docTitle=isEmpty?'공 캡 슐 입 고 내 역':'캡 슐 입 고 내 역';
   const meta=`작성자: ${matEsc(r.reg_user||'-')}　|　확인자: ${matEsc(r.confirm_user||'-')}　|　등록일: ${fmtDate(r.created_at)}　|　상태: ${matEsc(r.status||'대기')}`;
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>캡슐 입고 내역</title>
+  const colgroup=isEmpty
+    ? `<colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"></colgroup>`
+    : `<colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"></colgroup>`;
+  const headRow=isEmpty
+    ? `<tr><th>입고예정일</th><th>업체</th><th>품번</th><th>규격</th><th>품명</th><th>판매가</th><th>수량</th><th>박스</th><th>카톤</th></tr>`
+    : `<tr><th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th><th>판매가</th><th>수량</th><th>박스</th><th>카톤</th></tr>`;
+  const emptyColspan=isEmpty?9:8;
+  const footColspan=isEmpty?6:5;
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${docTitle}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Malgun Gothic','Noto Sans KR',sans-serif;padding:14px;color:#1a1f2e}
@@ -3529,15 +3645,15 @@ function printMatData(r){
     tr{page-break-inside:avoid}
     tfoot td{background:#eef1f6;font-weight:700}
     col.c0{width:8%}col.c1{width:9%}col.c2{width:13%}col.c3{width:auto}
-    col.c4{width:7%}col.c5{width:6%}col.c6{width:7%}col.c7{width:6%}col.c8{width:8%}
+    col.c4{width:7%}col.c5{width:6%}col.c6{width:7%}col.c7{width:6%}
   </style></head><body>
-    <h2>캡 슐 입 고 내 역</h2>
+    <h2>${docTitle}</h2>
     <div class="meta">${meta}</div>
     <table>
-      <colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"><col class="c8"></colgroup>
-      <thead><tr><th>입고예정일</th><th>업체</th><th>품번</th><th>품명</th><th>판매가</th><th>수량</th><th>박스</th><th>카톤</th><th>실제입고</th></tr></thead>
-      <tbody>${bodyRows||'<tr><td colspan="9">품목 없음</td></tr>'}</tbody>
-      <tfoot><tr><td colspan="5" style="text-align:right">합계</td><td class="r">${fmt(q)}</td><td></td><td class="r">${fmt(c)}</td><td></td></tr></tfoot>
+      ${colgroup}
+      <thead>${headRow}</thead>
+      <tbody>${bodyRows||'<tr><td colspan="'+emptyColspan+'">품목 없음</td></tr>'}</tbody>
+      <tfoot><tr><td colspan="${footColspan}" style="text-align:right">합계</td><td class="r">${fmt(q)}</td><td></td><td class="r">${fmt(c)}</td></tr></tfoot>
     </table>
   </body></html>`;
   const ifr=document.createElement('iframe');
@@ -3559,10 +3675,10 @@ function dlMatInXls(){
   const rows=[];
   _matInData.forEach(r=>{
     (r.items||[]).forEach(it=>{
-      rows.push([fmtDate(r.created_at), r.status||'대기', r.reg_user||'', r.confirm_user||'', it.plan_date, it.vendor, it.p_no, it.item, it.price, it.qty, it.box_qty, it.carton, it.actual_qty]);
+      rows.push([fmtDate(r.created_at), r.kind||'캡슐', r.status||'대기', r.reg_user||'', r.confirm_user||'', it.plan_date, it.vendor, it.p_no, it.spec||'', it.item, it.price, it.qty, it.box_qty, it.carton]);
     });
   });
-  dlXls([['등록일','상태','작성자','확인자','입고예정일','업체','품번','품명','판매가','수량','박스','카톤','실제입고'],...rows],'자재입고내역');
+  dlXls([['등록일','종류','상태','작성자','확인자','입고예정일','업체','품번','규격','품명','판매가','수량','박스','카톤'],...rows],'자재입고내역');
 }
 
 // ========== 수주 알람 (1분 갱신) ==========
