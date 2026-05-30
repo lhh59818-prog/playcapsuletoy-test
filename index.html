@@ -3397,8 +3397,8 @@ function updateMatpSum(kind){
     const qty=Number((tr.querySelector(pre+'qty')?.value||'').replace(/,/g,''))||0;
     const box=Number((tr.querySelector(pre+'box')?.value||'').replace(/,/g,''))||0;
     const carton=Number((tr.querySelector(pre+'carton')?.value||'').replace(/,/g,''))||0;
-    sumQty   += qty*box;       // 봉지수량 합계 = 봉지수량 × 박스수량
-    sumBox   += carton*box;    // 박스수량 합계 = 카톤수 × 박스수량
+    sumQty   += box*carton;    // 봉지수량 합계 = 박스수량 × 카톤수
+    sumBox   += box*carton;    // 박스수량 합계 = 박스수량 × 카톤수 (동일)
     sumCarton+= carton;        // 카톤수 합계 = 카톤수 단순 합산
   });
   if(El(cfg.sumQty)) El(cfg.sumQty).textContent=fmt(sumQty);
@@ -3493,7 +3493,7 @@ async function saveMatPlan(){
   const kind=_matpKind;
   const items=collectMatpRows(kind);
   if(items.length===0){ toast('입력된 자재가 없습니다','er'); return; }
-  const total_qty=items.reduce((s,r)=>s+((Number(r.qty)||0)*(Number(r.box_qty)||0)),0);
+  const total_qty=items.reduce((s,r)=>s+((Number(r.box_qty)||0)*(Number(r.carton)||0)),0);
   const total_carton=items.reduce((s,r)=>s+(Number(r.carton)||0),0);
   const title=kind==='공캡슐'?'공 캡슐 입고 내역':'캡슐 입고 내역';
   const plan_date=earliestPlanDate(items);
@@ -3642,7 +3642,7 @@ function fillMatViewTable(items, editable, kind, isDone){
   const emptyColspan=isEmpty?9:8;
   tb.innerHTML = (items||[]).map((it,i)=>{
     const qn=Number(it.qty)||0, bn=Number(it.box_qty)||0, cn=Number(it.carton)||0;
-    sumQty+=qn*bn; sumBox+=cn*bn; sumCarton+=cn;
+    sumQty+=bn*cn; sumBox+=bn*cn; sumCarton+=cn;
     if(editable){
       const specCell=isEmpty?`<td><input class="mv-spec" value="${matEsc(it.spec)}"></td>`:'';
       return `<tr data-vr="${i}">
@@ -3681,7 +3681,7 @@ function updateMatViewSum(){
     const qty=Number((tr.querySelector('.mv-qty')?.value||'').replace(/,/g,''))||0;
     const box=Number((tr.querySelector('.mv-box')?.value||'').replace(/,/g,''))||0;
     const carton=Number((tr.querySelector('.mv-carton')?.value||'').replace(/,/g,''))||0;
-    sumQty+=qty*box; sumBox+=carton*box; sumCarton+=carton;
+    sumQty+=box*carton; sumBox+=box*carton; sumCarton+=carton;
   });
   El('mati-view-sum-qty').textContent=fmt(sumQty);
   if(El('mati-view-sum-box')) El('mati-view-sum-box').textContent=fmt(sumBox);
@@ -3726,7 +3726,7 @@ async function saveMatEdit(){
     if(isEmpty) row.spec=g('mv-spec');
     items.push(row);
   });
-  const total_qty=items.reduce((s,r)=>s+(r.qty*r.box_qty),0);
+  const total_qty=items.reduce((s,r)=>s+(r.box_qty*r.carton),0);
   const total_carton=items.reduce((s,r)=>s+r.carton,0);
   const plan_date=earliestPlanDate(items);
   try{ showOv('저장 중...');
@@ -3790,7 +3790,7 @@ function printMatData(r){
   let sumQty=0,sumBox=0,sumCarton=0;
   const bodyRows=items.map(it=>{
     const qn=Number(it.qty)||0, bn=Number(it.box_qty)||0, cn=Number(it.carton)||0;
-    sumQty+=qn*bn; sumBox+=cn*bn; sumCarton+=cn;
+    sumQty+=bn*cn; sumBox+=bn*cn; sumCarton+=cn;
     if(isEmpty){
       return `<tr>
         <td>${matEsc(it.plan_date)}</td><td>${matEsc(it.vendor)}</td><td>${matEsc(it.p_no)}</td><td>${matEsc(it.spec)}</td>
