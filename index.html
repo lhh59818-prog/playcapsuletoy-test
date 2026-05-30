@@ -3740,19 +3740,70 @@ async function saveMatEdit(){
 }
 
 async function completeMatIn(id){
-  if(!confirm('완료하시겠습니까?\n완료 후에는 관리자만 수정/삭제할 수 있습니다.')) return;
+  const r=(_matInData||[]).find(x=>x.id===id);
+  const items=r?(r.items||[]):[];
+  const wh=WHS[0]||'기초창고';
+  // 입고 대상 품목 (박스수량 × 카톤수 > 0)
+  const inRows=items.map(it=>({
+    item:(it.item||'').trim(),
+    p_no:it.p_no||'',
+    vendor:it.vendor||'',
+    price:Number(it.price)||0,
+    qty:(Number(it.box_qty)||0)*(Number(it.carton)||0)
+  })).filter(x=>x.item && x.qty>0);
+  const totalQty=inRows.reduce((s,x)=>s+x.qty,0);
+  // 경고성 확인창
+  const msg='⚠️ 완료 처리하면 아래 내용이 자동으로 재고에 입고됩니다.\n\n'
+    +'• 입고 창고: '+wh+'\n'
+    +'• 품목 수: '+inRows.length+'건\n'
+    +'• 총 입고 수량: '+fmt(totalQty)+'개 (박스수량 × 카톤수)\n\n'
+    +'입고 후에는 되돌리려면 별도로 재고를 조정해야 합니다.\n정말 진행하시겠습니까?';
+  if(!confirm(msg)) return;
   try{ showOv('처리 중...');
     const today=new Date().toISOString().slice(0,10);
+    // 1) 재고 자동 입고
+    if(inRows.length){
+      const txRows=inRows.map(x=>({type:'입고',date:today,vendor:x.vendor,p_no:x.p_no,item:x.item,qty:x.qty,price:x.price,note:'자재입고 자동입고',warehouse:wh,reg_user:(USERNAME||'')}));
+      const{error:txErr}=await db.from('transactions').insert(txRows);
+      if(txErr) throw new Error('재고 입고 실패: '+txErr.message);
+    }
+    // 2) 상태 완료 처리
     const{error}=await db.from('material_orders').update({status:'완료',confirm_user:(USERNAME||''),confirm_date:today,updated_at:new Date().toISOString()}).eq('id',id);
     if(error) throw new Error(error.message);
-    toast('완료 처리되었습니다','ok'); await loadMatIn();
+    toast('완료 처리 + '+inRows.length+'건 자동 입고되었습니다','ok'); await loadMatIn();
   }catch(e){ toast('실패: '+e.message,'er'); }finally{hideOv();}
 }
 async function reopenMatIn(id){
+  const r=(_matInData||[]).find(x=>x.id===id);
+  const items=r?(r.items||[]):[];
+  const wh=WHS[0]||'기초창고';
+  // 완료 때 입고된 분 (박스수량 × 카톤수)
+  const backRows=items.map(it=>({
+    item:(it.item||'').trim(),
+    p_no:it.p_no||'',
+    vendor:it.vendor||'',
+    price:Number(it.price)||0,
+    qty:(Number(it.box_qty)||0)*(Number(it.carton)||0)
+  })).filter(x=>x.item && x.qty>0);
+  const totalQty=backRows.reduce((s,x)=>s+x.qty,0);
+  const msg='⚠️ 대기 상태로 되돌립니다.\n\n'
+    +'완료 시 자동 입고된 재고가 다시 차감됩니다.\n'
+    +'• 창고: '+wh+'\n'
+    +'• 차감 수량: '+fmt(totalQty)+'개 ('+backRows.length+'건)\n\n'
+    +'진행하시겠습니까?';
+  if(!confirm(msg)) return;
   try{ showOv('처리 중...');
+    const today=new Date().toISOString().slice(0,10);
+    // 1) 입고분 차감 (음수 입고 역거래)
+    if(backRows.length){
+      const txRows=backRows.map(x=>({type:'입고',date:today,vendor:x.vendor,p_no:x.p_no,item:x.item,qty:-x.qty,price:x.price,note:'자재입고 완료취소 차감',warehouse:wh,reg_user:(USERNAME||'')}));
+      const{error:txErr}=await db.from('transactions').insert(txRows);
+      if(txErr) throw new Error('재고 차감 실패: '+txErr.message);
+    }
+    // 2) 대기로 되돌림
     const{error}=await db.from('material_orders').update({status:'대기',confirm_user:'',confirm_date:null,updated_at:new Date().toISOString()}).eq('id',id);
     if(error) throw new Error(error.message);
-    toast('대기 상태로 변경되었습니다','inf'); await loadMatIn();
+    toast('대기 상태로 변경 + 재고 차감 완료','inf'); await loadMatIn();
   }catch(e){ toast('실패: '+e.message,'er'); }finally{hideOv();}
 }
 async function delMatIn(id){
